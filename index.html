@@ -152,7 +152,7 @@ footer{padding:30px 0 50px;border-top:1px solid var(--line);color:var(--muted);f
     </div>
 
     <div class="chat" aria-label="Demo chatbot LaporFasilitas">
-      <div class="chat-head">Chatbot LaporFasilitas <span>demo simulasi</span></div>
+      <div class="chat-head">Chatbot LaporFasilitas <span id="mode">chatbot AI</span></div>
       <div class="msgs" id="msgs" role="log" aria-live="polite"></div>
       <div class="chips" id="chips"></div>
       <form id="form">
@@ -419,7 +419,7 @@ function handleLocal(text){
   setTimeout(finish,450);
 }
 /* ---------- Chatbot terhubung AI (lewat /api/chat), cadangan: simulasi ---------- */
-var history=[], useLocal=false, busy=false;
+var chatHistory=[], useLocal=false, busy=false;
 
 function saveTicket(l){
   var id;
@@ -427,30 +427,31 @@ function saveTicket(l){
   tickets.unshift({id:id,kat:l.kategori,lok:l.lokasi,desk:l.deskripsi,urg:l.urgensi,st:'Baru'});
   filter='Semua';renderFilters();renderRows();
   say('Kode tiket: '+id+'\nKategori: '+l.kategori+'\nLokasi: '+l.lokasi+'\nUrgensi: '+l.urgensi+'\n\nLaporan sudah masuk ke dashboard pengelola.','bot');
-  history=[];
+  chatHistory=[];
   setChips(['Buat laporan baru']);
 }
 
 function handle(text){
   text=text.trim(); if(!text||busy) return;
   if(text==='Buat laporan baru'){
-    say(text,'me'); inp.value=''; chips.innerHTML=''; history=[]; draft=null; start(); return;
+    say(text,'me'); inp.value=''; chips.innerHTML=''; chatHistory=[]; draft=null; start(); return;
   }
   if(useLocal){ handleLocal(text); return; }
   var mine=say(text,'me'); inp.value=''; chips.innerHTML='';
-  history.push({role:'user',content:text});
+  chatHistory.push({role:'user',content:text});
   busy=true;
   var wait=say('Mengetik...','bot');
-  fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:history})})
+  fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:chatHistory})})
     .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
     .then(function(d){
       wait.remove(); busy=false;
-      history.push({role:'assistant',content:d.reply});
+      chatHistory.push({role:'assistant',content:d.reply});
       say(d.reply,'bot');
       if(d.laporan) saveTicket(d.laporan);
     })
     .catch(function(){
-      wait.remove(); mine.remove(); busy=false; useLocal=true; history=[];
+      wait.remove(); mine.remove(); busy=false; useLocal=true; chatHistory=[];
+      document.getElementById('mode').textContent='mode simulasi';
       say('AI belum tersambung, jadi chatbot memakai mode simulasi.','bot');
       handleLocal(text);
     });
