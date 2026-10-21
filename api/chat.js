@@ -4,6 +4,7 @@
 // Variabel yang dipakai:
 //   AI_PROVIDER        "anthropic" (default), "gemini", atau "huggingface"
 //   GEMINI_API_KEY     wajib jika provider = gemini
+//   GEMINI_THINKING_BUDGET opsional, isi 0 untuk mempercepat (jika model mendukung)
 //   GEMINI_MODEL       opsional, default gemini-flash-latest (alias model Flash terbaru)
 //   ANTHROPIC_API_KEY  wajib jika provider = anthropic
 //   ANTHROPIC_MODEL    opsional, default claude-haiku-5-5
@@ -103,6 +104,11 @@ async function callHuggingFace(messages) {
 
 async function callGemini(messages) {
   const model = process.env.GEMINI_MODEL || 'gemini-flash-latest';
+  const genCfg = { maxOutputTokens: 600, responseMimeType: 'application/json' };
+  // Opsional: GEMINI_THINKING_BUDGET=0 untuk mematikan proses "berpikir" (lebih cepat) di model yang mendukung
+  if (process.env.GEMINI_THINKING_BUDGET !== undefined && process.env.GEMINI_THINKING_BUDGET !== '') {
+    genCfg.thinkingConfig = { thinkingBudget: Number(process.env.GEMINI_THINKING_BUDGET) };
+  }
   const r = await fetch(
     'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent',
     {
@@ -117,7 +123,7 @@ async function callGemini(messages) {
           role: m.role === 'assistant' ? 'model' : 'user',
           parts: [{ text: m.content }],
         })),
-        generationConfig: { maxOutputTokens: 600, responseMimeType: 'application/json' },
+        generationConfig: genCfg,
       }),
     }
   );
@@ -137,12 +143,15 @@ module.exports = async (req, res) => {
   }
   try {
     const provider = (process.env.AI_PROVIDER || 'anthropic').toLowerCase();
+    const t0 = Date.now();
     let text;
     if (provider === 'gemini' && !process.env.GEMINI_API_KEY) throw new Error('GEMINI_API_KEY belum terbaca di server (cek nama variabel dan Redeploy)');
     if (provider === 'gemini') text = await callGemini(messages);
     else if (provider === 'huggingface') text = await callHuggingFace(messages);
     else text = await callClaude(messages);
-    return res.status(200).json(parseReply(text));
+    const out = parseReply(text);
+    out.ms = Date.now() - t0; // lama waktu panggilan ke AI (milidetik)
+    return res.status(200).json(out);
   } catch (e) {
     console.error(e);
     // detail ditampilkan untuk diagnosa; hapus baris detail ini kalau sudah berhasil dan mau dirilis

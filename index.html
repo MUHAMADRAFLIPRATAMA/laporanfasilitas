@@ -440,6 +440,7 @@ function handle(text){
   var mine=say(text,'me'); inp.value=''; chips.innerHTML='';
   chatHistory.push({role:'user',content:text});
   busy=true;
+  var t0=performance.now();
   var wait=say('Mengetik...','bot');
   fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:chatHistory})})
     .then(function(r){
@@ -448,6 +449,8 @@ function handle(text){
     })
     .then(function(d){
       wait.remove(); busy=false;
+      var tot=((performance.now()-t0)/1000).toFixed(1);
+      document.getElementById('mode').textContent='chatbot AI · total '+tot+' dtk'+(d.ms?' · AI '+(d.ms/1000).toFixed(1)+' dtk':'');
       chatHistory.push({role:'assistant',content:d.reply});
       say(d.reply,'bot');
       if(d.laporan) saveTicket(d.laporan);
