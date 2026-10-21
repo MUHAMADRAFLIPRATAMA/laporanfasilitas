@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LaporFasilitas – Pengaduan Fasilitas Kampus Berbasis AI Chatbot</title>
+<meta name="description" content="Lapor kerusakan fasilitas kampus cukup dengan bercakap-cakap. Proyek Manajemen Proyek Kelompok 7.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛠️</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F6F8; --surface:#FFFFFF; --ink:#12202B; --muted:#52646F; --line:#D5DFE5;
+  --accent:#0E7C86; --accent-ink:#FFFFFF; --soft:#E1F0F2;
+  --high:#C8372D; --mid:#B97800; --low:#2A8454;
+  --font-h:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --font-b:"Public Sans","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0D1519; --surface:#16222A; --ink:#E8F0F3; --muted:#9FB2BC; --line:#2A3B45;
+    --accent:#3BC0CC; --accent-ink:#06191C; --soft:#12303A;
+    --high:#FF7A6E; --mid:#F0B544; --low:#5CCB8F;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0D1519; --surface:#16222A; --ink:#E8F0F3; --muted:#9FB2BC; --line:#2A3B45;
+  --accent:#3BC0CC; --accent-ink:#06191C; --soft:#12303A;
+  --high:#FF7A6E; --mid:#F0B544; --low:#5CCB8F;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-b);line-height:1.6;font-size:16px}
+h1,h2,h3{font-family:var(--font-h);line-height:1.1;margin:0}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .wrap{display:flex;align-items:center;gap:16px;height:56px}
+.brand{font-family:var(--font-h);font-weight:800;font-size:1.15rem;text-decoration:none;margin-right:auto}
+nav{display:flex;gap:18px;font-size:.9rem}
+nav a{text-decoration:none;color:var(--muted)}
+nav a:hover{color:var(--ink)}
+.theme{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:6px 10px;cursor:pointer;font:inherit;font-size:.85rem}
+@media(max-width:760px){nav{display:none}}
+
+.hero{padding:48px 0 40px}
+.hero .grid{display:grid;grid-template-columns:1fr 1.05fr;gap:40px;align-items:start}
+@media(max-width:860px){.hero .grid{grid-template-columns:1fr}}
+.hero h1{font-size:clamp(2.2rem,5.5vw,3.6rem);font-weight:800;letter-spacing:-.02em}
+.hero p.lead{font-size:1.1rem;color:var(--muted);max-width:46ch;margin:18px 0 22px}
+.meta{font-size:.9rem;color:var(--muted);border-left:3px solid var(--accent);padding-left:12px}
+.meta b{color:var(--ink)}
+
+/* chat */
+.chat{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;height:460px}
+.chat-head{padding:12px 16px;border-bottom:1px solid var(--line);font-weight:600;display:flex;justify-content:space-between;align-items:center;font-size:.95rem}
+.chat-head span{font-weight:400;color:var(--muted);font-size:.8rem}
+.msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.m{max-width:85%;padding:10px 13px;border-radius:14px;font-size:.95rem;white-space:pre-wrap;word-wrap:break-word}
+.m.bot{background:var(--soft);border-bottom-left-radius:4px;align-self:flex-start}
+.m.me{background:var(--accent);color:var(--accent-ink);border-bottom-right-radius:4px;align-self:flex-end}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 10px}
+.chip{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:5px 11px;font:inherit;font-size:.8rem;cursor:pointer}
+.chip:hover{border-color:var(--accent)}
+.chat form{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}
+.chat input{flex:1;min-width:0;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:10px 12px;font:inherit}
+.btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:10px;padding:10px 16px;font:inherit;font-weight:600;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+
+section{padding:56px 0;border-top:1px solid var(--line)}
+section h2{font-size:clamp(1.7rem,3.5vw,2.3rem);font-weight:700;margin-bottom:8px}
+section .sub{color:var(--muted);margin:0 0 28px;max-width:60ch}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+@media(max-width:760px){.two{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px}
+.panel h3{font-size:1.2rem;margin-bottom:10px}
+.panel ul{margin:0;padding-left:20px}
+.panel li{margin:6px 0}
+.panel.out{border-style:dashed}
+.tag{display:inline-block;font-size:.8rem;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--soft);margin-bottom:10px}
+
+/* dashboard */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.filters .chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tbl{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:.92rem}
+.tblwrap{overflow-x:auto}
+.tbl th,.tbl td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:.82rem;color:var(--muted);font-weight:600}
+.tbl tr:last-child td{border-bottom:0}
+.urg{font-weight:700}
+.urg.Tinggi{color:var(--high)}.urg.Sedang{color:var(--mid)}.urg.Rendah{color:var(--low)}
+.empty{padding:20px;color:var(--muted)}
+
+/* timeline */
+.weeks{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface)}
+@media(max-width:860px){.weeks{grid-template-columns:1fr}}
+.wk{padding:22px;border-right:1px solid var(--line)}
+.wk:last-child{border-right:0}
+@media(max-width:860px){.wk{border-right:0;border-bottom:1px solid var(--line)}.wk:last-child{border-bottom:0}}
+.wk small{color:var(--accent);font-weight:600}
+.wk h3{font-size:1.25rem;margin:4px 0 8px}
+.wk p{margin:0;color:var(--muted);font-size:.95rem}
+
+.tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:18px}
+.tools div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+.tools b{display:block;margin-bottom:4px}
+.tools span{color:var(--muted);font-size:.92rem}
+
+.team{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+.person{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+.person b{display:block}
+.person .nim{color:var(--muted);font-size:.85rem}
+.person .role{margin-top:8px;font-size:.9rem;color:var(--accent);font-weight:600}
+footer{padding:30px 0 50px;border-top:1px solid var(--line);color:var(--muted);font-size:.9rem}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#atas">LaporFasilitas</a>
+    <nav>
+      <a href="#dashboard">Dashboard</a>
+      <a href="#latar">Latar belakang</a>
+      <a href="#lingkup">Ruang lingkup</a>
+      <a href="#ai">AI</a>
+      <a href="#metode">Metode</a>
+      <a href="#rencana">Rencana kerja</a>
+      <a href="#tim">Tim</a>
+    </nav>
+    <button class="theme" id="theme" type="button" aria-label="Ganti mode terang atau gelap">Mode gelap</button>
+  </div>
+</header>
+
+<main id="atas">
+<div class="wrap hero">
+  <div class="grid">
+    <div>
+      <h1>Rusak? Ceritakan saja ke chatbot.</h1>
+      <p class="lead">Sistem pengaduan fasilitas kampus berbasis AI web chatbot. Mahasiswa melapor dengan bahasa sehari-hari, AI menentukan kategori dan tingkat urgensi, lalu laporan masuk ke dashboard pengelola dengan kode tiket.</p>
+      <div class="meta">
+        <b>Perencanaan Proyek Teknologi Informasi</b><br>
+        Mata kuliah Manajemen Proyek<br>
+        Dosen pengampu: Muhammad Abdul Haqi<br>
+        Kelompok 7, Teknologi Informasi 2026
+      </div>
+    </div>
+
+    <div class="chat" aria-label="Demo chatbot LaporFasilitas">
+      <div class="chat-head">Chatbot LaporFasilitas <span>demo simulasi</span></div>
+      <div class="msgs" id="msgs" role="log" aria-live="polite"></div>
+      <div class="chips" id="chips"></div>
+      <form id="form">
+        <input id="inp" type="text" placeholder="Contoh: AC di ruang 301 mati total" autocomplete="off" aria-label="Tulis laporan">
+        <button class="btn" type="submit">Kirim</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<section id="dashboard">
+  <div class="wrap">
+    <h2>Dashboard pengelola</h2>
+    <p class="sub">Laporan dari chatbot di atas langsung muncul di sini. Filter berdasarkan status, lalu ubah status laporan saat sedang ditangani.</p>
+    <div class="filters" id="filters" role="group" aria-label="Filter status"></div>
+    <div class="tblwrap"><table class="tbl">
+      <thead><tr><th>Tiket</th><th>Kategori</th><th>Lokasi</th><th>Deskripsi</th><th>Urgensi</th><th>Status</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table></div>
+  </div>
+</section>
+
+<section id="latar">
+  <div class="wrap">
+    <h2>Latar belakang dan tujuan</h2>
+    <p class="sub">Tahap inisiasi proyek.</p>
+    <div class="two">
+      <div class="panel">
+        <h3>Latar belakang</h3>
+        <ul>
+          <li>Pelaporan kerusakan fasilitas kampus (AC, proyektor, Wi-Fi, dan lainnya) masih manual, jalurnya tidak jelas, dan informasi lokasinya sering tidak lengkap.</li>
+          <li>Solusinya: aplikasi web berbasis AI web chatbot, sehingga mahasiswa cukup melapor lewat percakapan bahasa sehari-hari.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Tujuan proyek</h3>
+        <ul>
+          <li>Mempermudah pelaporan fasilitas kampus melalui percakapan dengan AI.</li>
+          <li>Menentukan tingkat urgensi laporan secara otomatis: Rendah, Sedang, atau Tinggi.</li>
+          <li>Menyimpan laporan ke basis data terpusat lengkap dengan kode tiket agar bisa dipantau pengelola.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="lingkup">
+  <div class="wrap">
+    <h2>Ruang lingkup</h2>
+    <p class="sub">Batas yang disepakati supaya proyek selesai tepat waktu.</p>
+    <div class="two">
+      <div class="panel">
+        <span class="tag">Termasuk dalam proyek</span>
+        <ul>
+          <li>Percakapan AI chatbot: kategori, lokasi, deskripsi aduan, dan kode tiket.</li>
+          <li>Penentuan tingkat urgensi laporan otomatis oleh AI.</li>
+          <li>Halaman daftar laporan (dashboard pengelola) dengan filter status Baru, Diproses, Selesai.</li>
+          <li>Aplikasi web responsif untuk desktop dan HP, dengan mode terang/gelap.</li>
+        </ul>
+      </div>
+      <div class="panel out">
+        <span class="tag">Di luar proyek</span>
+        <ul>
+          <li>Login/SSO terintegrasi dengan sistem akademik kampus.</li>
+          <li>Upload foto atau video bukti kerusakan.</li>
+          <li>Notifikasi otomatis lewat email atau WhatsApp.</li>
+          <li>Aplikasi mobile native (Android/iOS).</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="ai">
+  <div class="wrap">
+    <h2>Jenis AI yang digunakan</h2>
+    <p class="sub">Sistem memakai Hugging Face API untuk dua jenis tugas.</p>
+    <div class="two">
+      <div class="panel">
+        <h3>Text generation / conversational AI</h3>
+        <p>Menggerakkan alur obrolan chatbot yang memandu mahasiswa saat melapor.</p>
+      </div>
+      <div class="panel">
+        <h3>Text classification</h3>
+        <p>Membaca teks laporan untuk menentukan kategori fasilitas dan tingkat urgensi, lalu menyimpannya ke database secara otomatis.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="metode">
+  <div class="wrap">
+    <h2>Metode kerja dan tools kolaborasi</h2>
+    <div class="two" style="margin-top:20px">
+      <div class="panel">
+        <h3>Design Thinking</h3>
+        <p>Dipakai saat inisiasi untuk memahami masalah pelaporan dan merancang alur percakapan chatbot.</p>
+      </div>
+      <div class="panel">
+        <h3>Agile / Scrum ringan</h3>
+        <p>Pengembangan dalam siklus pendek bertahap: Backlog, Sprint, Review, lalu Perbaiki.</p>
+      </div>
+    </div>
+    <div class="tools">
+      <div><b>Canva dan Word</b><span>Proposal, dokumen kebutuhan, dan catatan pengujian.</span></div>
+      <div><b>Trello</b><span>Papan Kanban: backlog, tugas sprint, PIC, dan status pengerjaan.</span></div>
+      <div><b>GitHub</b><span>Repository kode dan integrasi backend.</span></div>
+      <div><b>WhatsApp / Discord</b><span>Koordinasi harian dan rapat tim.</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="rencana">
+  <div class="wrap">
+    <h2>Rencana kerja</h2>
+    <p class="sub">Tiga minggu pertama pengerjaan.</p>
+    <div class="weeks">
+      <div class="wk"><small>Minggu 4</small><h3>Validasi dan rancang proses</h3><p>Observasi kebutuhan, penyusunan proposal, perancangan UI/UX di Figma, dan skema flowchart chatbot.</p></div>
+      <div class="wk"><small>Minggu 5</small><h3>Bangun sistem inti</h3><p>Tampilan web responsif, integrasi Hugging Face API (chatbot dan klasifikasi), dan database terpusat.</p></div>
+      <div class="wk"><small>Minggu 6</small><h3>Uji coba dan evaluasi</h3><p>QA testing, evaluasi akurasi respons AI, penyelesaian dashboard pengelola, dan penyusunan laporan akhir.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="tim">
+  <div class="wrap">
+    <h2>Anggota tim</h2>
+    <p class="sub">Kelompok 7, Teknologi Informasi 2026.</p>
+    <div class="team">
+      <div class="person"><b>Anandya Arlys</b><div class="nim">20240140002</div><div class="role">Project Manager / AI &amp; Backend Engineer</div></div>
+      <div class="person"><b>Muhamad Rafli Pratama</b><div class="nim">&nbsp;</div><div class="role">Analis &amp; Dokumentasi</div></div>
+      <div class="person"><b>Faiq Rizky Maulana</b><div class="nim">20240140043</div><div class="role">UI/UX Designer</div></div>
+      <div class="person"><b>Rossa Kayla Isma Aziz</b><div class="nim">20240140215</div><div class="role">Frontend Developer</div></div>
+      <div class="person"><b>Danisha Novira Rausyanfikri</b><div class="nim">20240140138</div><div class="role">Quality Assurance</div></div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer><div class="wrap">LaporFasilitas, proyek mata kuliah Manajemen Proyek. Chatbot memakai AI lewat API bila sudah dikonfigurasi di server, dan otomatis beralih ke simulasi berbasis kata kunci bila belum tersambung.</div></footer>
+
+<script>
+/* ---------- Tema ---------- */
+(function(){
+  var root=document.documentElement, btn=document.getElementById('theme');
+  function isDark(){
+    var t=root.getAttribute('data-theme');
+    if(t) return t==='dark';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  function label(){ btn.textContent = isDark() ? 'Mode terang' : 'Mode gelap'; }
+  btn.addEventListener('click',function(){
+    root.setAttribute('data-theme', isDark() ? 'light' : 'dark');
+    label();
+  });
+  label();
+})();
+
+/* ---------- Data & dashboard ---------- */
+var tickets=[
+  {id:'LF-1042',kat:'Wi-Fi',lok:'Perpustakaan lantai 2',desk:'Wi-Fi sering putus saat jam sibuk',urg:'Sedang',st:'Diproses'},
+  {id:'LF-1038',kat:'Proyektor',lok:'Ruang 204',desk:'Proyektor tidak menyala sama sekali',urg:'Sedang',st:'Baru'},
+  {id:'LF-1031',kat:'Listrik',lok:'Lab Komputer 1',desk:'Stop kontak korsleting dan keluar percikan api',urg:'Tinggi',st:'Selesai'}
+];
+var filter='Semua', STATUS=['Baru','Diproses','Selesai'];
+
+function renderFilters(){
+  var box=document.getElementById('filters'); box.innerHTML='';
+  ['Semua'].concat(STATUS).forEach(function(s){
+    var b=document.createElement('button');
+    b.type='button'; b.className='chip'; b.textContent=s;
+    b.setAttribute('aria-pressed', String(filter===s));
+    b.onclick=function(){filter=s;renderFilters();renderRows();};
+    box.appendChild(b);
+  });
+}
+function cell(tr,text,cls){var td=document.createElement('td');td.textContent=text;if(cls)td.className=cls;tr.appendChild(td);return td;}
+function renderRows(){
+  var tb=document.getElementById('rows'); tb.innerHTML='';
+  var list=tickets.filter(function(t){return filter==='Semua'||t.st===filter;});
+  if(!list.length){
+    var tr=document.createElement('tr'),td=document.createElement('td');
+    td.colSpan=6;td.className='empty';td.textContent='Belum ada laporan dengan status ini.';
+    tr.appendChild(td);tb.appendChild(tr);return;
+  }
+  list.forEach(function(t){
+    var tr=document.createElement('tr');
+    cell(tr,t.id);cell(tr,t.kat);cell(tr,t.lok);cell(tr,t.desk);
+    cell(tr,t.urg,'urg '+t.urg);
+    var td=document.createElement('td');
+    var b=document.createElement('button');
+    b.type='button';b.className='chip';
+    b.textContent=t.st;
+    b.title='Klik untuk mengubah status';
+    b.setAttribute('aria-label','Status '+t.id+': '+t.st+'. Klik untuk mengubah.');
+    b.onclick=function(){t.st=STATUS[(STATUS.indexOf(t.st)+1)%3];renderRows();};
+    td.appendChild(b);tr.appendChild(td);tb.appendChild(tr);
+  });
+}
+
+/* ---------- Chatbot simulasi ---------- */
+var KAT=[
+  ['AC',/\b(ac|pendingin|kipas)\b/i],
+  ['Proyektor',/proyektor|infocus|lcd/i],
+  ['Wi-Fi',/wi-?fi|internet|jaringan|sinyal/i],
+  ['Listrik',/listrik|lampu|stop ?kontak|korsleting|colokan/i],
+  ['Air & toilet',/air|toilet|wc|keran|kamar mandi|wastafel/i],
+  ['Furnitur',/kursi|meja|papan tulis|pintu|jendela/i]
+];
+var URG_T=/korsleting|percikan|api|asap|bocor|banjir|mati total|berbahaya|tersengat|ambruk|roboh/i;
+var URG_R=/kotor|lecet|kurang|sedikit|goyang|cat |bau/i;
+var LOK=/\b(ruang(?:an)?|lab(?:oratorium)?|gedung|aula|perpustakaan|kelas|lantai|kantin|musala|masjid)\b[\s\w.\-]{0,24}/i;
+
+var msgs=document.getElementById('msgs'), inp=document.getElementById('inp'), chips=document.getElementById('chips');
+var draft=null;
+
+function say(text,who){
+  var d=document.createElement('div'); d.className='m '+who; d.textContent=text;
+  msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight;
+  return d;
+}
+function setChips(list){
+  chips.innerHTML='';
+  list.forEach(function(t){
+    var b=document.createElement('button');b.type='button';b.className='chip';b.textContent=t;
+    b.onclick=function(){inp.value=t;handle(t);};
+    chips.appendChild(b);
+  });
+}
+function start(){
+  draft=null;
+  say('Halo! Fasilitas apa yang bermasalah? Ceritakan dengan bahasa sehari-hari, lengkap dengan lokasinya kalau bisa.','bot');
+  setChips(['AC di ruang 301 mati total','Proyektor Lab Komputer 2 gambarnya buram','Wi-Fi di perpustakaan lemot']);
+}
+function finish(){
+  var id='LF-'+(1000+Math.floor(Math.random()*9000));
+  while(tickets.some(function(t){return t.id===id;})) id='LF-'+(1000+Math.floor(Math.random()*9000));
+  var t={id:id,kat:draft.kat,lok:draft.lok,desk:draft.desk,urg:draft.urg,st:'Baru'};
+  tickets.unshift(t);
+  filter='Semua';renderFilters();renderRows();
+  say('Laporan tercatat.\nKode tiket: '+id+'\nKategori: '+t.kat+'\nLokasi: '+t.lok+'\nUrgensi: '+t.urg+'\n\nPengelola bisa melihatnya di dashboard di bawah.','bot');
+  setChips(['Buat laporan baru']);
+  draft={done:true};
+}
+function handleLocal(text){
+  text=text.trim(); if(!text) return;
+  say(text,'me'); inp.value=''; chips.innerHTML='';
+  if(text==='Buat laporan baru'||(draft&&draft.done)){ draft=null; if(text==='Buat laporan baru'){start();return;} }
+  if(!draft){
+    var kat=null;
+    for(var i=0;i<KAT.length;i++){ if(KAT[i][1].test(text)){kat=KAT[i][0];break;} }
+    var m=text.match(LOK);
+    var urg=URG_T.test(text)?'Tinggi':(URG_R.test(text)?'Rendah':'Sedang');
+    draft={kat:kat,lok:m?m[0].trim():null,desk:text,urg:urg};
+    if(!draft.kat){ draft.kat='Lainnya'; }
+  }else if(draft.needLok){
+    draft.lok=text; draft.needLok=false;
+  }
+  if(!draft.lok){
+    draft.needLok=true;
+    setTimeout(function(){say('Kategori terdeteksi: '+draft.kat+'. Di mana lokasinya? Sebutkan gedung atau ruangannya.','bot');},350);
+    return;
+  }
+  setTimeout(finish,450);
+}
+/* ---------- Chatbot terhubung AI (lewat /api/chat), cadangan: simulasi ---------- */
+var history=[], useLocal=false, busy=false;
+
+function saveTicket(l){
+  var id;
+  do{ id='LF-'+(1000+Math.floor(Math.random()*9000)); }while(tickets.some(function(t){return t.id===id;}));
+  tickets.unshift({id:id,kat:l.kategori,lok:l.lokasi,desk:l.deskripsi,urg:l.urgensi,st:'Baru'});
+  filter='Semua';renderFilters();renderRows();
+  say('Kode tiket: '+id+'\nKategori: '+l.kategori+'\nLokasi: '+l.lokasi+'\nUrgensi: '+l.urgensi+'\n\nLaporan sudah masuk ke dashboard pengelola.','bot');
+  history=[];
+  setChips(['Buat laporan baru']);
+}
+
+function handle(text){
+  text=text.trim(); if(!text||busy) return;
+  if(text==='Buat laporan baru'){
+    say(text,'me'); inp.value=''; chips.innerHTML=''; history=[]; draft=null; start(); return;
+  }
+  if(useLocal){ handleLocal(text); return; }
+  var mine=say(text,'me'); inp.value=''; chips.innerHTML='';
+  history.push({role:'user',content:text});
+  busy=true;
+  var wait=say('Mengetik...','bot');
+  fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:history})})
+    .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(d){
+      wait.remove(); busy=false;
+      history.push({role:'assistant',content:d.reply});
+      say(d.reply,'bot');
+      if(d.laporan) saveTicket(d.laporan);
+    })
+    .catch(function(){
+      wait.remove(); mine.remove(); busy=false; useLocal=true; history=[];
+      say('AI belum tersambung, jadi chatbot memakai mode simulasi.','bot');
+      handleLocal(text);
+    });
+}
+
+document.getElementById('form').addEventListener('submit',function(e){e.preventDefault();handle(inp.value);});
+
+renderFilters();renderRows();start();
+</script>
+</body>
+</html>
