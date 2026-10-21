@@ -384,24 +384,33 @@ function readPhoto(file,cb){
 }
 function uploadPhoto(dataUrl){
   return fetch('/api/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:dataUrl.split(',')[1],type:'image/jpeg'})})
-    .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
+    .then(function(r){
+      if(!r.ok) return r.json().catch(function(){return {};}).then(function(j){ throw new Error(j.detail||j.error||('HTTP '+r.status)); });
+      return r.json();
+    })
     .then(function(j){return j.url;});
 }
 function openLb(src){document.getElementById('lbImg').src=src;document.getElementById('lb').hidden=false;}
 function createTicket(d,cb){
   d.foto=pendingPhoto; clearPhoto();
   if(!dbOn){cb(localTicket(d));return;}
-  var fotoGagal=false;
-  var up=d.foto ? uploadPhoto(d.foto).catch(function(){fotoGagal=true;return null;}) : Promise.resolve(null);
+  var fotoErr=null;
+  var up=d.foto ? uploadPhoto(d.foto).catch(function(e){fotoErr=String((e&&e.message)||'tidak diketahui').slice(0,300);return null;}) : Promise.resolve(null);
   up.then(function(url){
     return fetch('/api/laporan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kategori:d.kat,lokasi:d.lok,deskripsi:d.desk,urgensi:d.urg,foto_url:url})});
   })
-  .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
+  .then(function(r){
+    if(!r.ok) return r.json().catch(function(){return {};}).then(function(j){ throw new Error(j.detail||j.error||('HTTP '+r.status)); });
+    return r.json();
+  })
   .then(function(row){
     tickets.unshift(fromRow(row));afterAdd();cb(row.kode_tiket);
-    if(fotoGagal) say('Catatan: foto gagal diunggah, laporan tetap tersimpan tanpa foto.','bot');
+    if(fotoErr) say('Catatan: foto gagal diunggah, laporan tetap tersimpan tanpa foto.\n\nAlasan: '+fotoErr,'bot');
   })
-  .catch(function(){cb(localTicket(d));});
+  .catch(function(e){
+    cb(localTicket(d));
+    say('Catatan: laporan BELUM tersimpan ke database, hanya sementara di browser ini.\n\nAlasan: '+String((e&&e.message)||'tidak diketahui').slice(0,300),'bot');
+  });
 }
 function loadTickets(){
   fetch('/api/laporan')

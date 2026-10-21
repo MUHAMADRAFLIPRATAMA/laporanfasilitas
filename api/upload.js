@@ -39,7 +39,12 @@ module.exports = async (req, res) => {
     const headers = { apikey: key, 'content-type': 'image/jpeg', 'cache-control': 'max-age=31536000' };
     if (key.startsWith('eyJ')) headers.authorization = 'Bearer ' + key; // kunci lama (service_role) berbentuk JWT
 
-    const r = await fetch(url + '/storage/v1/object/bukti/' + path, { method: 'POST', headers, body: buf });
+    const target = url + '/storage/v1/object/bukti/' + path;
+    let r = await fetch(target, { method: 'POST', headers, body: buf });
+    if ((r.status === 401 || r.status === 403) && !headers.authorization) {
+      // cadangan: sebagian konfigurasi Storage meminta kunci juga di header Authorization
+      r = await fetch(target, { method: 'POST', headers: { ...headers, authorization: 'Bearer ' + key }, body: buf });
+    }
     if (!r.ok) throw new Error('Storage ' + r.status + ': ' + (await r.text()));
 
     return res.status(201).json({ url: url + '/storage/v1/object/public/bukti/' + path });
