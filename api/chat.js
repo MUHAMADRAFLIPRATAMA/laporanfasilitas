@@ -103,7 +103,7 @@ async function callHuggingFace(messages) {
 }
 
 async function callGemini(messages) {
-  const model = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+  const model = process.env.GEMINI_MODEL || 'gemini-1.5-flash-latest';
   const genCfg = { maxOutputTokens: 600, responseMimeType: 'application/json' };
   // Opsional: GEMINI_THINKING_BUDGET=0 untuk mematikan proses "berpikir" (lebih cepat) di model yang mendukung
   if (process.env.GEMINI_THINKING_BUDGET !== undefined && process.env.GEMINI_THINKING_BUDGET !== '') {
