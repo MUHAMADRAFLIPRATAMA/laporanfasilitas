@@ -4,7 +4,7 @@
 // Variabel yang dipakai:
 //   AI_PROVIDER        "anthropic" (default), "gemini", atau "huggingface"
 //   GEMINI_API_KEY     wajib jika provider = gemini
-//   GEMINI_MODEL       opsional, default gemini-2.5-flash
+//   GEMINI_MODEL       opsional, default gemini-flash-latest (alias model Flash terbaru)
 //   ANTHROPIC_API_KEY  wajib jika provider = anthropic
 //   ANTHROPIC_MODEL    opsional, default claude-haiku-5-5
 //   HF_TOKEN           wajib jika provider = huggingface
@@ -102,7 +102,7 @@ async function callHuggingFace(messages) {
 }
 
 async function callGemini(messages) {
-  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+  const model = process.env.GEMINI_MODEL || 'gemini-flash-latest';
   const r = await fetch(
     'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent',
     {
@@ -138,12 +138,14 @@ module.exports = async (req, res) => {
   try {
     const provider = (process.env.AI_PROVIDER || 'anthropic').toLowerCase();
     let text;
+    if (provider === 'gemini' && !process.env.GEMINI_API_KEY) throw new Error('GEMINI_API_KEY belum terbaca di server (cek nama variabel dan Redeploy)');
     if (provider === 'gemini') text = await callGemini(messages);
     else if (provider === 'huggingface') text = await callHuggingFace(messages);
     else text = await callClaude(messages);
     return res.status(200).json(parseReply(text));
   } catch (e) {
     console.error(e);
-    return res.status(502).json({ error: 'AI tidak dapat dihubungi' });
+    // detail ditampilkan untuk diagnosa; hapus baris detail ini kalau sudah berhasil dan mau dirilis
+    return res.status(502).json({ error: 'AI tidak dapat dihubungi', detail: String((e && e.message) || e).slice(0, 300) });
   }
 };

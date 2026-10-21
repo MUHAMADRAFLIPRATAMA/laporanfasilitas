@@ -442,17 +442,20 @@ function handle(text){
   busy=true;
   var wait=say('Mengetik...','bot');
   fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:chatHistory})})
-    .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(r){
+      if(!r.ok) return r.json().catch(function(){return {};}).then(function(j){ throw new Error(j.detail||j.error||('HTTP '+r.status)); });
+      return r.json();
+    })
     .then(function(d){
       wait.remove(); busy=false;
       chatHistory.push({role:'assistant',content:d.reply});
       say(d.reply,'bot');
       if(d.laporan) saveTicket(d.laporan);
     })
-    .catch(function(){
+    .catch(function(err){
       wait.remove(); mine.remove(); busy=false; useLocal=true; chatHistory=[];
       document.getElementById('mode').textContent='mode simulasi';
-      say('AI belum tersambung, jadi chatbot memakai mode simulasi.','bot');
+      say('AI belum tersambung, jadi chatbot memakai mode simulasi.\n\nAlasan: '+String((err&&err.message)||'tidak diketahui').slice(0,300),'bot');
       handleLocal(text);
     });
 }
