@@ -181,7 +181,7 @@ footer b{font-family:var(--font-h);font-weight:600;font-size:1.1rem;color:var(--
 
 <section class="sec" id="dashboard">
   <div class="wrap grid">
-    <div><span class="no">01</span><h2>Dashboard pengelola</h2><p class="intro">Laporan dari chatbot langsung muncul di sini. Klik status untuk mengubahnya.</p></div>
+    <div><span class="no">01</span><h2>Dashboard pengelola</h2><p class="intro">Laporan dari chatbot langsung muncul di sini. Klik status untuk mengubahnya.</p><p class="intro" id="dbnote"></p></div>
     <div>
       <div class="filters" id="filters" role="group" aria-label="Filter status"></div>
       <div class="tblwrap"><table class="tbl">
@@ -319,7 +319,7 @@ footer b{font-family:var(--font-h);font-weight:600;font-size:1.1rem;color:var(--
 })();
 
 /* ---------- Data & dashboard ---------- */
-var tickets=[
+var SEED=[
   {id:'LF-1042',kat:'Wi-Fi',lok:'Perpustakaan lantai 2',desk:'Wi-Fi sering putus saat jam sibuk',urg:'Sedang',st:'Diproses'},
   {id:'LF-1038',kat:'Proyektor',lok:'Ruang 204',desk:'Proyektor tidak menyala sama sekali',urg:'Sedang',st:'Baru'},
   {id:'LF-1031',kat:'Listrik',lok:'Lab Komputer 1',desk:'Stop kontak korsleting dan keluar percikan api',urg:'Tinggi',st:'Selesai'}
@@ -337,6 +337,51 @@ function renderFilters(){
   });
 }
 function cell(tr,text,cls){var td=document.createElement('td');td.textContent=text;if(cls)td.className=cls;tr.appendChild(td);return td;}
+var tickets=[], dbOn=false, adminPw='';
+function fromRow(r){return {id:r.kode_tiket,kat:r.kategori,lok:r.lokasi,desk:r.deskripsi,urg:r.urgensi,st:r.status};}
+function setNote(t){document.getElementById('dbnote').textContent=t;}
+function afterAdd(){filter='Semua';renderFilters();renderRows();}
+function localTicket(d){
+  var id;
+  do{ id='LF-'+(1000+Math.floor(Math.random()*9000)); }while(tickets.some(function(t){return t.id===id;}));
+  tickets.unshift({id:id,kat:d.kat,lok:d.lok,desk:d.desk,urg:d.urg,st:'Baru'});
+  afterAdd();
+  return id;
+}
+function createTicket(d,cb){
+  if(!dbOn){cb(localTicket(d));return;}
+  fetch('/api/laporan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kategori:d.kat,lokasi:d.lok,deskripsi:d.desk,urgensi:d.urg})})
+    .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
+    .then(function(row){tickets.unshift(fromRow(row));afterAdd();cb(row.kode_tiket);})
+    .catch(function(){cb(localTicket(d));});
+}
+function loadTickets(){
+  fetch('/api/laporan')
+    .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
+    .then(function(rows){
+      if(!Array.isArray(rows)) throw new Error('format');
+      dbOn=true; tickets=rows.map(fromRow); renderRows();
+      setNote('Data tersimpan di database dan terlihat oleh semua pengelola.');
+    })
+    .catch(function(){
+      tickets=SEED.slice(); renderRows();
+      setNote('Mode demo: data hanya tersimpan di browser ini (database belum tersambung).');
+    });
+}
+function changeStatus(t){
+  var next=STATUS[(STATUS.indexOf(t.st)+1)%3];
+  if(!dbOn){t.st=next;renderRows();return;}
+  if(!adminPw){adminPw=prompt('Kata sandi pengelola untuk mengubah status:')||'';}
+  if(!adminPw) return;
+  fetch('/api/laporan',{method:'PATCH',headers:{'Content-Type':'application/json','x-admin-password':adminPw},body:JSON.stringify({kode_tiket:t.id,status:next})})
+    .then(function(r){
+      if(r.status===401||r.status===403){adminPw='';alert('Kata sandi salah atau belum diatur di server.');throw 0;}
+      if(!r.ok) throw new Error(r.status);
+      t.st=next; renderRows();
+    })
+    .catch(function(e){ if(e) alert('Gagal mengubah status.'); });
+}
+
 function renderRows(){
   var tb=document.getElementById('rows'); tb.innerHTML='';
   var list=tickets.filter(function(t){return filter==='Semua'||t.st===filter;});
@@ -355,7 +400,7 @@ function renderRows(){
     b.textContent=t.st;
     b.title='Klik untuk mengubah status';
     b.setAttribute('aria-label','Status '+t.id+': '+t.st+'. Klik untuk mengubah.');
-    b.onclick=function(){t.st=STATUS[(STATUS.indexOf(t.st)+1)%3];renderRows();};
+    b.onclick=function(){changeStatus(t);};
     td.appendChild(b);tr.appendChild(td);tb.appendChild(tr);
   });
 }
@@ -395,14 +440,12 @@ function start(){
   setChips(['AC di ruang 301 mati total','Proyektor Lab Komputer 2 gambarnya buram','Wi-Fi di perpustakaan lemot']);
 }
 function finish(){
-  var id='LF-'+(1000+Math.floor(Math.random()*9000));
-  while(tickets.some(function(t){return t.id===id;})) id='LF-'+(1000+Math.floor(Math.random()*9000));
-  var t={id:id,kat:draft.kat,lok:draft.lok,desk:draft.desk,urg:draft.urg,st:'Baru'};
-  tickets.unshift(t);
-  filter='Semua';renderFilters();renderRows();
-  say('Laporan tercatat.\nKode tiket: '+id+'\nKategori: '+t.kat+'\nLokasi: '+t.lok+'\nUrgensi: '+t.urg+'\n\nPengelola bisa melihatnya di dashboard di bawah.','bot');
-  setChips(['Buat laporan baru']);
+  var d=draft;
   draft={done:true};
+  createTicket({kat:d.kat,lok:d.lok,desk:d.desk,urg:d.urg},function(id){
+    say('Laporan tercatat.\nKode tiket: '+id+'\nKategori: '+d.kat+'\nLokasi: '+d.lok+'\nUrgensi: '+d.urg+'\n\nPengelola bisa melihatnya di dashboard di bawah.','bot');
+    setChips(['Buat laporan baru']);
+  });
 }
 function handleLocal(text){
   text=text.trim(); if(!text) return;
@@ -429,13 +472,11 @@ function handleLocal(text){
 var chatHistory=[], useLocal=false, busy=false;
 
 function saveTicket(l){
-  var id;
-  do{ id='LF-'+(1000+Math.floor(Math.random()*9000)); }while(tickets.some(function(t){return t.id===id;}));
-  tickets.unshift({id:id,kat:l.kategori,lok:l.lokasi,desk:l.deskripsi,urg:l.urgensi,st:'Baru'});
-  filter='Semua';renderFilters();renderRows();
-  say('Kode tiket: '+id+'\nKategori: '+l.kategori+'\nLokasi: '+l.lokasi+'\nUrgensi: '+l.urgensi+'\n\nLaporan sudah masuk ke dashboard pengelola.','bot');
   chatHistory=[];
-  setChips(['Buat laporan baru']);
+  createTicket({kat:l.kategori,lok:l.lokasi,desk:l.deskripsi,urg:l.urgensi},function(id){
+    say('Kode tiket: '+id+'\nKategori: '+l.kategori+'\nLokasi: '+l.lokasi+'\nUrgensi: '+l.urgensi+'\n\nLaporan sudah masuk ke dashboard pengelola.','bot');
+    setChips(['Buat laporan baru']);
+  });
 }
 
 function handle(text){
@@ -472,7 +513,7 @@ function handle(text){
 
 document.getElementById('form').addEventListener('submit',function(e){e.preventDefault();handle(inp.value);});
 
-renderFilters();renderRows();start();
+renderFilters();renderRows();start();loadTickets();
 </script>
 </body>
 </html>
