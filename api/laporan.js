@@ -15,7 +15,10 @@ function config() {
   const url = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
   const key = process.env.SUPABASE_SECRET_KEY;
   if (!url || !key) {
-    throw new Error('SUPABASE_URL atau SUPABASE_SECRET_KEY belum terbaca di server (cek nama variabel dan Redeploy)');
+    const hilang = [!url && 'SUPABASE_URL', !key && 'SUPABASE_SECRET_KEY'].filter(Boolean).join(' dan ');
+    // hanya NAMA variabel yang ditampilkan (bukan isinya), untuk diagnosa salah ketik
+    const terbaca = Object.keys(process.env).filter((k) => /supa|admin|gemini|ai_/i.test(k)).join(', ') || '(tidak ada)';
+    throw new Error('Yang belum terbaca: ' + hilang + '. Variabel terkait yang terbaca server: ' + terbaca + '. Cek nama, environment Production, lalu Redeploy.');
   }
   return {
     base: url + '/rest/v1/laporan',
