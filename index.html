@@ -362,8 +362,17 @@ function localTicket(d){
   afterAdd();
   return id;
 }
-var pendingPhoto=null;
-function clearPhoto(){
+var pendingPhoto=null, photoBubble=null;
+function sayImage(src){
+  var d=document.createElement('div'); d.className='m me';
+  var im=document.createElement('img'); im.src=src; im.alt='Foto bukti';
+  im.style.cssText='max-width:200px;max-height:200px;border-radius:6px;display:block';
+  d.appendChild(im); msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight;
+  return d;
+}
+function clearPhoto(keep){
+  if(!keep && photoBubble){photoBubble.remove();}
+  photoBubble=null;
   pendingPhoto=null;
   document.getElementById('prev').hidden=true;
   document.getElementById('foto').value='';
@@ -392,8 +401,12 @@ function uploadPhoto(dataUrl){
 }
 function openLb(src){document.getElementById('lbImg').src=src;document.getElementById('lb').hidden=false;}
 function createTicket(d,cb){
-  d.foto=pendingPhoto; clearPhoto();
-  if(!dbOn){cb(localTicket(d));return;}
+  d.foto=pendingPhoto; clearPhoto(true);
+  if(!dbOn){
+    cb(localTicket(d));
+    if(d.foto) say('Foto terlampir di laporan (mode demo, hanya tersimpan di browser ini).','bot');
+    return;
+  }
   var fotoErr=null;
   var up=d.foto ? uploadPhoto(d.foto).catch(function(e){fotoErr=String((e&&e.message)||'tidak diketahui').slice(0,300);return null;}) : Promise.resolve(null);
   up.then(function(url){
@@ -405,6 +418,7 @@ function createTicket(d,cb){
   })
   .then(function(row){
     tickets.unshift(fromRow(row));afterAdd();cb(row.kode_tiket);
+    if(d.foto && !fotoErr) say('Foto bukti ikut tersimpan bersama laporan.','bot');
     if(fotoErr) say('Catatan: foto gagal diunggah, laporan tetap tersimpan tanpa foto.\n\nAlasan: '+fotoErr,'bot');
   })
   .catch(function(e){
@@ -583,12 +597,15 @@ document.getElementById('attach').onclick=function(){document.getElementById('fo
 document.getElementById('foto').onchange=function(){
   var f=this.files&&this.files[0]; if(!f) return;
   readPhoto(f,function(dataUrl){
+    if(photoBubble){photoBubble.remove();}
     pendingPhoto=dataUrl;
     document.getElementById('prevImg').src=dataUrl;
     document.getElementById('prev').hidden=false;
+    photoBubble=sayImage(dataUrl);
+    say('Foto diterima. Foto akan ikut tersimpan ke laporan setelah laporan selesai dibuat. Silakan lanjut ceritakan masalahnya.','bot');
   });
 };
-document.getElementById('prevX').onclick=clearPhoto;
+document.getElementById('prevX').onclick=function(){clearPhoto(false);};
 document.getElementById('lb').onclick=function(){this.hidden=true;};
 document.addEventListener('keydown',function(e){if(e.key==='Escape')document.getElementById('lb').hidden=true;});
 renderFilters();renderRows();start();loadTickets();
