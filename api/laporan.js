@@ -21,6 +21,7 @@ function config() {
     throw new Error('Yang belum terbaca: ' + hilang + '. Variabel terkait yang terbaca server: ' + terbaca + '. Cek nama, environment Production, lalu Redeploy.');
   }
   return {
+    url,
     base: url + '/rest/v1/laporan',
     // Secret key dikirim lewat header apikey saja
     headers: { apikey: key, 'content-type': 'application/json' },
@@ -37,7 +38,7 @@ function newCode() {
 
 module.exports = async (req, res) => {
   try {
-    const { base, headers } = config();
+    const { url, base, headers } = config();
 
     // ---------- GET: daftar laporan ----------
     if (req.method === 'GET') {
@@ -55,6 +56,9 @@ module.exports = async (req, res) => {
         deskripsi: text(b.deskripsi, 200),
         urgensi: URGENSI.includes(b.urgensi) ? b.urgensi : 'Sedang',
       };
+      // foto opsional: hanya alamat dari bucket "bukti" milik project ini yang diterima
+      const fu = typeof b.foto_url === 'string' ? b.foto_url : '';
+      if (fu && fu.length < 400 && fu.startsWith(url + '/storage/v1/object/public/bukti/')) row.foto_url = fu;
       if (!row.kategori || !row.lokasi || !row.deskripsi) {
         return res.status(400).json({ error: 'Kategori, lokasi, dan deskripsi wajib diisi' });
       }
