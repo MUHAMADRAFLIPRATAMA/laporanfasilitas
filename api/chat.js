@@ -5,7 +5,7 @@
 //   AI_PROVIDER        "anthropic" (default), "gemini", atau "huggingface"
 //   GEMINI_API_KEY     wajib jika provider = gemini
 //   GEMINI_THINKING_BUDGET opsional, isi 0 untuk mempercepat (jika model mendukung)
-//   GEMINI_MODEL       opsional, default gemini-flash-latest (alias model Flash terbaru)
+//   GEMINI_MODEL       opsional, default gemini-flash-lite-latest (alias model Flash-Lite terbaru, lebih cepat)
 //   ANTHROPIC_API_KEY  wajib jika provider = anthropic
 //   ANTHROPIC_MODEL    opsional, default claude-haiku-5-5
 //   HF_TOKEN           wajib jika provider = huggingface
@@ -102,14 +102,18 @@ async function callHuggingFace(messages) {
   return d.choices[0].message.content;
 }
 
-async function callGemini(messages) {
-  const model = process.env.GEMINI_MODEL || 'gemini-flash-latest';
+async function callGemini(messages, info) {
+  const model = process.env.GEMINI_MODEL || 'gemini-flash-lite-latest';
   const genCfg = { maxOutputTokens: 600, responseMimeType: 'application/json' };
   // Opsional: GEMINI_THINKING_BUDGET=0 untuk mematikan proses "berpikir" (lebih cepat) di model yang mendukung
   if (process.env.GEMINI_THINKING_BUDGET !== undefined && process.env.GEMINI_THINKING_BUDGET !== '') {
     genCfg.thinkingConfig = { thinkingBudget: Number(process.env.GEMINI_THINKING_BUDGET) };
   }
-  const r = await fetch(
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 20000);
+  let r;
+  try {
+  r = await fetch(
     'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent',
     {
       method: 'POST',
@@ -117,6 +121,7 @@ async function callGemini(messages) {
         'content-type': 'application/json',
         'x-goog-api-key': process.env.GEMINI_API_KEY,
       },
+      signal: ctrl.signal,
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: SYSTEM }] },
         contents: messages.map((m) => ({
@@ -127,8 +132,18 @@ async function callGemini(messages) {
       }),
     }
   );
+  } catch (e) {
+    if (e && e.name === 'AbortError') throw new Error('Gemini terlalu lama menjawab (lebih dari 20 detik)');
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
   if (!r.ok) throw new Error('Gemini API ' + r.status + ': ' + (await r.text()));
   const d = await r.json();
+  if (info) {
+    info.model = model;
+    info.think = d.usageMetadata && d.usageMetadata.thoughtsTokenCount;
+  }
   const parts = (d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts) || [];
   return parts.map((p) => p.text || '').join('');
 }
@@ -144,13 +159,16 @@ module.exports = async (req, res) => {
   try {
     const provider = (process.env.AI_PROVIDER || 'anthropic').toLowerCase();
     const t0 = Date.now();
+    const info = {};
     let text;
     if (provider === 'gemini' && !process.env.GEMINI_API_KEY) throw new Error('GEMINI_API_KEY belum terbaca di server (cek nama variabel dan Redeploy)');
-    if (provider === 'gemini') text = await callGemini(messages);
+    if (provider === 'gemini') text = await callGemini(messages, info);
     else if (provider === 'huggingface') text = await callHuggingFace(messages);
     else text = await callClaude(messages);
     const out = parseReply(text);
     out.ms = Date.now() - t0; // lama waktu panggilan ke AI (milidetik)
+    out.model = info.model;
+    out.think = info.think;
     return res.status(200).json(out);
   } catch (e) {
     console.error(e);
