@@ -5,7 +5,7 @@
 //   AI_PROVIDER        "anthropic" (default), "gemini", atau "huggingface"
 //   GEMINI_API_KEY     wajib jika provider = gemini
 //   GEMINI_THINKING_BUDGET opsional, isi 0 untuk mempercepat (jika model mendukung)
-//   GEMINI_MODEL       opsional, default gemini-flash-lite-latest (alias model Flash-Lite terbaru, lebih cepat)
+//   GEMINI_MODEL       opsional, default gemini-flash-latest (alias model Flash terbaru)
 //   ANTHROPIC_API_KEY  wajib jika provider = anthropic
 //   ANTHROPIC_MODEL    opsional, default claude-haiku-5-5
 //   HF_TOKEN           wajib jika provider = huggingface
@@ -102,50 +102,122 @@ async function callHuggingFace(messages) {
   return d.choices[0].message.content;
 }
 
-async function callGemini(messages, info) {
-  const model = process.env.GEMINI_MODEL || 'gemini-flash-lite-latest';
-  const genCfg = { maxOutputTokens: 600, responseMimeType: 'application/json' };
-  // Opsional: GEMINI_THINKING_BUDGET=0 untuk mematikan proses "berpikir" (lebih cepat) di model yang mendukung
-  if (process.env.GEMINI_THINKING_BUDGET !== undefined && process.env.GEMINI_THINKING_BUDGET !== '') {
-    genCfg.thinkingConfig = { thinkingBudget: Number(process.env.GEMINI_THINKING_BUDGET) };
-  }
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 20000);
-  let r;
-  try {
-  r = await fetch(
-    'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent',
-    {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-goog-api-key': process.env.GEMINI_API_KEY,
-      },
-      signal: ctrl.signal,
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: SYSTEM }] },
-        contents: messages.map((m) => ({
-          role: m.role === 'assistant' ? 'model' : 'user',
-          parts: [{ text: m.content }],
-        })),
-        generationConfig: genCfg,
-      }),
-    }
+let autoModel = null; // model yang terbukti jalan (disimpan selama server hidup)
+const goodIdx = {};   // variasi pengaturan yang terbukti diterima, per model
+
+async function listModels(signal) {
+  const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=100', {
+    headers: { 'x-goog-api-key': process.env.GEMINI_API_KEY },
+    signal,
+  });
+  if (!r.ok) throw new Error('ListModels ' + r.status);
+  const d = await r.json();
+  return (d.models || [])
+    .filter((m) => (m.supportedGenerationMethods || []).includes('generateContent'))
+    .map((m) => String(m.name).replace(/^models\//, ''));
+}
+
+function pickModel(names) {
+  const ok = names.filter((n) => /^gemini/.test(n) && !/tts|image|live|embed|audio|native|robotics|computer|thinking|learnlm/i.test(n));
+  const stable = ok.filter((n) => !/preview|exp/i.test(n));
+  return (
+    stable.find((n) => /flash-lite/.test(n)) ||
+    stable.find((n) => /flash/.test(n)) ||
+    ok.find((n) => /flash-lite/.test(n)) ||
+    ok.find((n) => /flash/.test(n)) ||
+    ok[0] ||
+    null
   );
+}
+
+async function callGemini(messages, info) {
+  const base = { maxOutputTokens: 600, responseMimeType: 'application/json' };
+
+  // Urutan percobaan: kalau Gemini menolak (400) karena ada opsi yang tidak didukung model,
+  // coba lagi dengan opsi yang lebih sederhana.
+  // Percobaan pertama meminta proses berpikir seminimal mungkin (model Gemini 3: thinkingLevel),
+  // lalu thinkingBudget 0 (model Gemini 2.5), lalu tanpa pengaturan berpikir sama sekali.
+  const variants = [];
+  const tb = process.env.GEMINI_THINKING_BUDGET;
+  if (tb !== undefined && tb !== '') variants.push({ ...base, thinkingConfig: { thinkingBudget: Number(tb) } });
+  variants.push({ ...base, thinkingConfig: { thinkingLevel: process.env.GEMINI_THINKING_LEVEL || 'minimal' } });
+  variants.push({ ...base, thinkingConfig: { thinkingBudget: 0 } });
+  variants.push(base);
+  variants.push({ maxOutputTokens: 600 });
+
+  const makeBody = (cfg) => JSON.stringify({
+    systemInstruction: { parts: [{ text: SYSTEM }] },
+    contents: messages.map((m) => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }],
+    })),
+    generationConfig: cfg,
+  });
+
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 25000);
+
+  async function tryModel(model) {
+    const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent';
+    let r;
+    let text = '';
+    for (let i = goodIdx[model] || 0; i < variants.length; i++) {
+      r = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-goog-api-key': process.env.GEMINI_API_KEY },
+        signal: ctrl.signal,
+        body: makeBody(variants[i]),
+      });
+      if (r.ok) { goodIdx[model] = i; break; }
+      if (r.status !== 400) break;
+      text = await r.text();
+    }
+    if (!r.ok && !r.bodyUsed) text = await r.text();
+    return { r, text };
+  }
+
+  try {
+    let model = autoModel || process.env.GEMINI_MODEL || 'gemini-flash-latest';
+    let names = null;
+    let out = await tryModel(model);
+
+    // Model ditolak (400/404): cari model lain yang tersedia di akun ini lalu coba otomatis
+    if (!out.r.ok && (out.r.status === 400 || out.r.status === 404)) {
+      names = await listModels(ctrl.signal).catch(() => null);
+      const alt = names && pickModel(names);
+      if (alt && alt !== model) {
+        const out2 = await tryModel(alt);
+        if (out2.r.ok) {
+          autoModel = alt;
+          model = alt;
+          out = out2;
+        } else {
+          out.text += ' | model ' + alt + ' juga gagal: ' + out2.r.status;
+        }
+      }
+    }
+
+    if (!out.r.ok) {
+      throw new Error(
+        'Gemini API ' + out.r.status + ' (model ' + model + ').' +
+        (names ? ' Model tersedia: ' + names.slice(0, 8).join(', ') + '.' : '') +
+        ' Respons: ' + out.text.replace(/\s+/g, ' ')
+      );
+    }
+
+    const d = await out.r.json();
+    if (info) {
+      info.model = model;
+      info.think = d.usageMetadata && d.usageMetadata.thoughtsTokenCount;
+    }
+    const parts = (d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts) || [];
+    return parts.map((p) => p.text || '').join('');
   } catch (e) {
-    if (e && e.name === 'AbortError') throw new Error('Gemini terlalu lama menjawab (lebih dari 20 detik)');
+    if (e && e.name === 'AbortError') throw new Error('Gemini terlalu lama menjawab (lebih dari 25 detik)');
     throw e;
   } finally {
     clearTimeout(timer);
   }
-  if (!r.ok) throw new Error('Gemini API ' + r.status + ': ' + (await r.text()));
-  const d = await r.json();
-  if (info) {
-    info.model = model;
-    info.think = d.usageMetadata && d.usageMetadata.thoughtsTokenCount;
-  }
-  const parts = (d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts) || [];
-  return parts.map((p) => p.text || '').join('');
 }
 
 module.exports = async (req, res) => {
