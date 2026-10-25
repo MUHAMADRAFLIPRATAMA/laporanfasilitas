@@ -53,7 +53,7 @@ nav a:hover{color:var(--accent)}
 @media(max-width:900px){nav{display:none}}
 @media(max-width:480px){.brand small{display:none}}
 
-.hero{padding:64px 0 56px}
+.hero{padding:64px 24px 56px}
 .hero .grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start}
 @media(max-width:900px){.hero .grid{grid-template-columns:1fr;gap:40px}}
 .eyebrow{font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:18px;display:flex;align-items:center;gap:10px}
@@ -137,6 +137,67 @@ footer .row{display:flex;gap:14px;align-items:center;margin-bottom:10px}
 footer .sun{display:block}
 footer b{font-family:var(--font-h);font-weight:600;font-size:1.1rem;color:var(--ink);display:block;line-height:1.2}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+/* ============ Tampilan kaca bening (glass) ============ */
+:root{
+  --glass:rgba(255,255,255,.46); --glass-strong:rgba(255,255,255,.66); --glass-input:rgba(255,255,255,.62);
+  --glass-border:rgba(255,255,255,.75); --hair:rgba(110,90,70,.14); --surface-solid:#FFFFFF;
+  --glass-shadow:0 8px 30px rgba(70,50,30,.10), inset 0 1px 0 rgba(255,255,255,.85);
+  --blob1:rgba(201,154,29,.34); --blob2:rgba(190,70,90,.20); --blob3:rgba(110,165,225,.30);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --glass:rgba(48,43,38,.42); --glass-strong:rgba(34,30,27,.62); --glass-input:rgba(20,18,16,.45);
+    --glass-border:rgba(255,255,255,.14); --hair:rgba(255,255,255,.08); --surface-solid:#1D1A17;
+    --glass-shadow:0 10px 34px rgba(0,0,0,.40), inset 0 1px 0 rgba(255,255,255,.10);
+    --blob1:rgba(227,179,65,.20); --blob2:rgba(170,45,70,.30); --blob3:rgba(60,95,170,.26);
+  }
+}
+:root[data-theme="dark"]{
+  --glass:rgba(48,43,38,.42); --glass-strong:rgba(34,30,27,.62); --glass-input:rgba(20,18,16,.45);
+  --glass-border:rgba(255,255,255,.14); --hair:rgba(255,255,255,.08); --surface-solid:#1D1A17;
+  --glass-shadow:0 10px 34px rgba(0,0,0,.40), inset 0 1px 0 rgba(255,255,255,.10);
+  --blob1:rgba(227,179,65,.20); --blob2:rgba(170,45,70,.30); --blob3:rgba(60,95,170,.26);
+}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(55vmax 55vmax at 10% 6%, var(--blob1), transparent 62%),
+    radial-gradient(50vmax 50vmax at 94% 16%, var(--blob2), transparent 62%),
+    radial-gradient(58vmax 58vmax at 68% 98%, var(--blob3), transparent 62%)}
+.chat,.tblwrap,.col,.wk,.tools div,.person{background:var(--glass);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);border:1px solid var(--glass-border);box-shadow:var(--glass-shadow);border-radius:22px}
+.theme,.chip{background:var(--glass);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);border:1px solid var(--glass-border);box-shadow:var(--glass-shadow);border-radius:999px}
+header.top{background:var(--glass-strong);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);border-bottom:1px solid var(--glass-border);border-top:2px solid var(--gold);box-shadow:0 4px 24px rgba(70,50,30,.06)}
+.chat{border-radius:26px;overflow:hidden}
+.chat-head{border-bottom:1px solid var(--hair)}
+.chat form{border-top:1px solid var(--hair)}
+.msgs{scrollbar-width:thin}
+.m{border-radius:20px}
+.m.bot{background:var(--glass-strong);border:1px solid var(--glass-border);box-shadow:inset 0 1px 0 rgba(255,255,255,.35);border-bottom-left-radius:6px}
+.m.me{background:var(--accent);box-shadow:0 6px 16px rgba(122,31,43,.22), inset 0 1px 0 rgba(255,255,255,.28);border-bottom-right-radius:6px}
+.chat input{background:var(--glass-input);border:1px solid var(--line);border-radius:16px;box-shadow:inset 0 1px 2px rgba(0,0,0,.06)}
+.btn{border-radius:16px;background-image:linear-gradient(180deg,rgba(255,255,255,.30),rgba(255,255,255,0));box-shadow:0 6px 16px rgba(122,31,43,.22), inset 0 1px 0 rgba(255,255,255,.45)}
+.chip{padding:5px 13px}
+.filters .chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.prev{border-top:1px solid var(--hair)}
+.tblwrap{border-radius:22px}
+.tbl th,.tbl td{border-bottom:1px solid var(--hair)}
+.thumb{border-radius:10px;border:1px solid var(--glass-border)}
+.col{padding:22px 24px}
+.col h3{border-top:0;padding-top:0}
+.col.out{border-style:dashed}
+.plain li{border-bottom:1px solid var(--hair)}
+.wk{padding:22px 24px;border-top:1px solid var(--glass-border)}
+.tools{gap:12px 16px}
+.tools div{padding:16px 18px;border-top:1px solid var(--glass-border)}
+.person{padding:14px 20px;margin-bottom:10px;border-radius:18px}
+.person:first-child{border-top:1px solid var(--glass-border)}
+.sec{border-top:1px solid var(--hair)}
+footer{border-top:1px solid var(--hair)}
+.lb{background:rgba(10,8,6,.5);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.lb img{border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.chat,.tblwrap,.col,.wk,.tools div,.person,.theme,.chip,header.top,.m.bot{background:var(--surface-solid)}}
+@media (prefers-reduced-transparency:reduce){.chat,.tblwrap,.col,.wk,.tools div,.person,.theme,.chip,header.top,.m.bot{background:var(--surface-solid);-webkit-backdrop-filter:none;backdrop-filter:none}}
+nav a,.theme{white-space:nowrap}
 </style>
 </head>
 <body>
@@ -144,7 +205,7 @@ footer b{font-family:var(--font-h);font-weight:600;font-size:1.1rem;color:var(--
 <header class="top">
   <div class="wrap">
     <a class="brand" href="#atas">
-      <span class="logo"><img src="logo-umy.png" alt="Logo Universitas Muhammadiyah Yogyakarta" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="sun"><svg viewBox="0 0 100 100" width="36" height="36" aria-hidden="true"><circle cx="50" cy="50" r="19" fill="currentColor"/><g stroke="currentColor" stroke-width="5" stroke-linecap="round"><line x1="50" y1="24" x2="50" y2="6" transform="rotate(0 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(30 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(60 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(90 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(120 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(150 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(180 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(210 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(240 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(270 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(300 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(330 50 50)"/></g></svg></span></span>
+      <span class="logo"><img src="logo-umy.jpg" alt="Logo Universitas Muhammadiyah Yogyakarta" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="sun"><svg viewBox="0 0 100 100" width="36" height="36" aria-hidden="true"><circle cx="50" cy="50" r="19" fill="currentColor"/><g stroke="currentColor" stroke-width="5" stroke-linecap="round"><line x1="50" y1="24" x2="50" y2="6" transform="rotate(0 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(30 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(60 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(90 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(120 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(150 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(180 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(210 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(240 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(270 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(300 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(330 50 50)"/></g></svg></span></span>
       <span><b>LaporFasilitas</b><small>Universitas Muhammadiyah Yogyakarta</small></span>
     </a>
     <nav>
