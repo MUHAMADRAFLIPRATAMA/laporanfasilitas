@@ -33,7 +33,7 @@
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:17px;line-height:1.65}
+body{margin:0;background:var(--bg) url('umy.jpeg') no-repeat center center fixed;background-size:cover;color:var(--ink);font-family:var(--font-b);font-size:17px;line-height:1.65}
 h1,h2,h3{font-family:var(--font-h);font-weight:500;margin:0;line-height:1.15}
 a{color:inherit}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
@@ -645,7 +645,8 @@ function handle(text){
       if(d.laporan) saveTicket(d.laporan);
     })
     .catch(function(err){
-      wait.remove(); mine.remove(); busy=false; useLocal=true; chatHistory=[];
+      wait.remove();
+       mine.remove(); busy=false; useLocal=true; chatHistory=[];
       document.getElementById('mode').textContent='mode simulasi';
       say('AI belum tersambung, jadi chatbot memakai mode simulasi.\n\nAlasan: '+String((err&&err.message)||'tidak diketahui').slice(0,300),'bot');
       handleLocal(text);
