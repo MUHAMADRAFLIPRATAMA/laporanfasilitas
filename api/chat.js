@@ -64,23 +64,34 @@ function parseReply(text) {
   }
 }
 
-async function callClaude(messages) {
-  const r = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: process.env.ANTHROPIC_MODEL || 'claude-haiku-5-5',
-      max_tokens: 400,
-      system: SYSTEM,
-      messages,
-    }),
-  });
-  if (!r.ok) throw new Error('Claude API ' + r.status + ': ' + (await r.text()));
+async function callClaude(messages, info) {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    throw new Error('ANTHROPIC_API_KEY belum terbaca di server (cek nama variabel dan Redeploy)');
+  }
+  const model = process.env.ANTHROPIC_MODEL || 'claude-haiku-5-5';
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 20000);
+  let r;
+  try {
+    r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      signal: ctrl.signal,
+      body: JSON.stringify({ model, max_tokens: 400, system: SYSTEM, messages }),
+    });
+  } catch (e) {
+    if (e && e.name === 'AbortError') throw new Error('Claude terlalu lama menjawab (lebih dari 20 detik)');
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
+  if (!r.ok) throw new Error('Claude API ' + r.status + ' (model ' + model + '): ' + (await r.text()));
   const d = await r.json();
+  if (info) info.model = model;
   return d.content.filter((b) => b.type === 'text').map((b) => b.text).join('');
 }
 
@@ -102,7 +113,8 @@ async function callHuggingFace(messages) {
   return d.choices[0].message.content;
 }
 
-let autoModel = null; // model yang terbukti jalan (disimpan selama server hidup)
+let autoModel = null; // model cadangan yang terbukti jalan
+let autoUntil = 0;    // sampai kapan model cadangan dipakai (ms sejak epoch)
 const goodIdx = {};   // variasi pengaturan yang terbukti diterima, per model
 
 async function listModels(signal) {
@@ -117,24 +129,20 @@ async function listModels(signal) {
     .map((m) => String(m.name).replace(/^models\//, ''));
 }
 
-function pickModel(names) {
-  const ok = names.filter((n) => /^gemini/.test(n) && !/tts|image|live|embed|audio|native|robotics|computer|thinking|learnlm/i.test(n));
+// Urutan cadangan: Flash-Lite stabil, Flash stabil, lalu versi preview
+function rankModels(names) {
+  const ok = names.filter((n) => /^gemini/.test(n) && /flash/.test(n) && !/tts|image|live|embed|audio|native|robotics|computer|thinking|learnlm/i.test(n));
   const stable = ok.filter((n) => !/preview|exp/i.test(n));
-  return (
-    stable.find((n) => /flash-lite/.test(n)) ||
-    stable.find((n) => /flash/.test(n)) ||
-    ok.find((n) => /flash-lite/.test(n)) ||
-    ok.find((n) => /flash/.test(n)) ||
-    ok[0] ||
-    null
-  );
+  const pre = ok.filter((n) => /preview|exp/i.test(n));
+  const lite = (arr) => arr.filter((n) => /flash-lite/.test(n));
+  const plain = (arr) => arr.filter((n) => !/flash-lite/.test(n));
+  return [...lite(stable), ...plain(stable), ...lite(pre), ...plain(pre)];
 }
 
 async function callGemini(messages, info) {
   const base = { maxOutputTokens: 600, responseMimeType: 'application/json' };
+  const TMO = Number(process.env.GEMINI_TIMEOUT_MS) || 10000; // batas waktu per model
 
-  // Urutan percobaan: kalau Gemini menolak (400) karena ada opsi yang tidak didukung model,
-  // coba lagi dengan opsi yang lebih sederhana.
   // Percobaan pertama meminta proses berpikir seminimal mungkin (model Gemini 3: thinkingLevel),
   // lalu thinkingBudget 0 (model Gemini 2.5), lalu tanpa pengaturan berpikir sama sekali.
   const variants = [];
@@ -154,73 +162,155 @@ async function callGemini(messages, info) {
     generationConfig: cfg,
   });
 
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 25000);
-
   async function tryModel(model) {
     const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent';
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), TMO);
     let r;
     let text = '';
-    for (let i = goodIdx[model] || 0; i < variants.length; i++) {
-      r = await fetch(endpoint, {
+    try {
+      for (let i = goodIdx[model] || 0; i < variants.length; i++) {
+        r = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', 'x-goog-api-key': process.env.GEMINI_API_KEY },
+          signal: ctrl.signal,
+          body: makeBody(variants[i]),
+        });
+        if (r.ok) { goodIdx[model] = i; break; }
+        text = await r.text();
+        if (r.status !== 400) break;
+      }
+      return { ok: r.ok, status: r.status, text, r };
+    } catch (e) {
+      if (e && e.name === 'AbortError') return { ok: false, status: 'timeout', text: 'tidak menjawab dalam ' + Math.round(TMO / 1000) + ' detik' };
+      throw e;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  const now = Date.now();
+  let model;
+  if (autoModel && now < autoUntil) {
+    model = autoModel;
+  } else if (process.env.GEMINI_MODEL) {
+    model = process.env.GEMINI_MODEL;
+  } else {
+    // Belum ada pilihan: ambil model Flash-Lite/Flash yang tersedia di akun ini (cenderung lebih cepat dan tidak sibuk)
+    const avail = await listModels(AbortSignal.timeout(8000)).catch(() => null);
+    const best = avail && rankModels(avail)[0];
+    model = best || 'gemini-flash-latest';
+    if (best) { autoModel = best; autoUntil = now + 3600000; }
+  }
+  let out = await tryModel(model);
+  const tried = [model + ': ' + out.status];
+  let names = null;
+
+  // Model gagal/sibuk (400, 404, 429, 5xx, atau lambat): coba model cadangan yang tersedia di akun ini
+  const retryable = (o) => !o.ok && (o.status === 'timeout' || [400, 404, 429, 500, 502, 503, 504].includes(o.status));
+  if (retryable(out)) {
+    const firstStatus = out.status;
+    names = await listModels(AbortSignal.timeout(8000)).catch(() => null);
+    const alts = rankModels(names || []).filter((n) => n !== model).slice(0, 2);
+    for (const alt of alts) {
+      const o2 = await tryModel(alt);
+      tried.push(alt + ': ' + o2.status);
+      if (o2.ok) {
+        // 400/404: model utama memang tidak cocok (pakai cadangan 24 jam); lainnya: sibuk sementara (5 menit)
+        autoModel = alt;
+        autoUntil = now + (firstStatus === 400 || firstStatus === 404 ? 86400000 : 300000);
+        model = alt;
+        out = o2;
+        break;
+      }
+    }
+  }
+
+  if (!out.ok) {
+    throw new Error(
+      'Gemini API ' + out.status + ' (model ' + model + '). Dicoba: ' + tried.join(', ') + '.' +
+      (names ? ' Model tersedia: ' + names.slice(0, 8).join(', ') + '.' : '') +
+      ' Respons: ' + String(out.text).replace(/\s+/g, ' ')
+    );
+  }
+
+  const d = await out.r.json();
+  if (info) {
+    info.model = model;
+    info.think = d.usageMetadata && d.usageMetadata.thoughtsTokenCount;
+  }
+  const parts = (d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts) || [];
+  return parts.map((p) => p.text || '').join('');
+}
+
+// ---------- Alat uji kecepatan model (khusus pengelola) ----------
+// Buka: /api/chat?cek=KATA_SANDI_PENGELOLA  -> daftar model Flash beserta waktu jawabnya
+async function benchOne(model) {
+  const t0 = Date.now();
+  const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent';
+  const cfgs = [{ thinkingConfig: { thinkingLevel: 'minimal' } }, { thinkingConfig: { thinkingBudget: 0 } }, {}];
+  let last = '';
+  for (const extra of cfgs) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 30000);
+    try {
+      const r = await fetch(endpoint, {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'x-goog-api-key': process.env.GEMINI_API_KEY },
         signal: ctrl.signal,
-        body: makeBody(variants[i]),
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: 'Balas dengan satu kata: siap' }] }],
+          generationConfig: { maxOutputTokens: 30, ...extra },
+        }),
       });
-      if (r.ok) { goodIdx[model] = i; break; }
-      if (r.status !== 400) break;
-      text = await r.text();
-    }
-    if (!r.ok && !r.bodyUsed) text = await r.text();
-    return { r, text };
-  }
-
-  try {
-    let model = autoModel || process.env.GEMINI_MODEL || 'gemini-flash-latest';
-    let names = null;
-    let out = await tryModel(model);
-
-    // Model ditolak (400/404): cari model lain yang tersedia di akun ini lalu coba otomatis
-    if (!out.r.ok && (out.r.status === 400 || out.r.status === 404)) {
-      names = await listModels(ctrl.signal).catch(() => null);
-      const alt = names && pickModel(names);
-      if (alt && alt !== model) {
-        const out2 = await tryModel(alt);
-        if (out2.r.ok) {
-          autoModel = alt;
-          model = alt;
-          out = out2;
-        } else {
-          out.text += ' | model ' + alt + ' juga gagal: ' + out2.r.status;
-        }
+      if (r.ok) {
+        const d = await r.json();
+        return {
+          model,
+          status: 200,
+          detik: Number(((Date.now() - t0) / 1000).toFixed(1)),
+          pengaturan: extra.thinkingConfig ? JSON.stringify(extra.thinkingConfig) : 'bawaan',
+          pikir: (d.usageMetadata && d.usageMetadata.thoughtsTokenCount) || 0,
+        };
       }
+      last = r.status;
+      if (r.status !== 400) break;
+    } catch (e) {
+      last = e && e.name === 'AbortError' ? 'timeout 30 detik' : String((e && e.message) || e);
+      break;
+    } finally {
+      clearTimeout(timer);
     }
-
-    if (!out.r.ok) {
-      throw new Error(
-        'Gemini API ' + out.r.status + ' (model ' + model + ').' +
-        (names ? ' Model tersedia: ' + names.slice(0, 8).join(', ') + '.' : '') +
-        ' Respons: ' + out.text.replace(/\s+/g, ' ')
-      );
-    }
-
-    const d = await out.r.json();
-    if (info) {
-      info.model = model;
-      info.think = d.usageMetadata && d.usageMetadata.thoughtsTokenCount;
-    }
-    const parts = (d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts) || [];
-    return parts.map((p) => p.text || '').join('');
-  } catch (e) {
-    if (e && e.name === 'AbortError') throw new Error('Gemini terlalu lama menjawab (lebih dari 25 detik)');
-    throw e;
-  } finally {
-    clearTimeout(timer);
   }
+  return { model, status: last, detik: Number(((Date.now() - t0) / 1000).toFixed(1)) };
+}
+
+async function benchAll() {
+  const names = await listModels();
+  const flash = names.filter((n) => /^gemini/.test(n) && /flash/.test(n) && !/tts|image|live|embed|audio|native|robotics|computer|thinking|learnlm/i.test(n));
+  const score = (n) => (/flash-lite/.test(n) ? 0 : 2) + (/preview|exp/i.test(n) ? 1 : 0);
+  const pick = flash.sort((a, b) => score(a) - score(b)).slice(0, 6);
+  if (!pick.includes('gemini-flash-latest')) pick.push('gemini-flash-latest');
+  const hasil = await Promise.all(pick.map(benchOne));
+  hasil.sort((a, b) => (a.status === 200 ? 0 : 1) - (b.status === 200 ? 0 : 1) || a.detik - b.detik);
+  return hasil;
 }
 
 module.exports = async (req, res) => {
+  // Alat uji kecepatan: GET /api/chat?cek=KATA_SANDI_PENGELOLA
+  if (req.method === 'GET' && req.query && req.query.cek !== undefined) {
+    const admin = process.env.ADMIN_PASSWORD;
+    if (!admin || req.query.cek !== admin) return res.status(401).json({ error: 'Kata sandi salah atau ADMIN_PASSWORD belum diatur' });
+    try {
+      const hasil = await benchAll();
+      return res.status(200).json({
+        catatan: 'Pilih model dengan status 200 dan detik terkecil, lalu isi variabel GEMINI_MODEL di Vercel dengan nama modelnya.',
+        hasil,
+      });
+    } catch (e) {
+      return res.status(502).json({ error: 'Uji gagal', detail: String((e && e.message) || e).slice(0, 300) });
+    }
+  }
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Gunakan metode POST' });
   }
@@ -236,7 +326,7 @@ module.exports = async (req, res) => {
     if (provider === 'gemini' && !process.env.GEMINI_API_KEY) throw new Error('GEMINI_API_KEY belum terbaca di server (cek nama variabel dan Redeploy)');
     if (provider === 'gemini') text = await callGemini(messages, info);
     else if (provider === 'huggingface') text = await callHuggingFace(messages);
-    else text = await callClaude(messages);
+    else text = await callClaude(messages, info);
     const out = parseReply(text);
     out.ms = Date.now() - t0; // lama waktu panggilan ke AI (milidetik)
     out.model = info.model;
