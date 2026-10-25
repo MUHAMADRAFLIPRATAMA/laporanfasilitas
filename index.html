@@ -32,7 +32,7 @@
   --high:#FF8A7A; --mid:#F0B544; --low:#6CCB95;
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth;scroll-snap-type:y mandatory;overflow-y:scroll}
 body{margin:0;background:var(--bg) url('umy.jpeg') no-repeat center center fixed;background-size:cover;color:var(--ink);font-family:var(--font-b);font-size:17px;line-height:1.65}
 h1,h2,h3{font-family:var(--font-h);font-weight:500;margin:0;line-height:1.15}
 a{color:inherit}
@@ -136,7 +136,7 @@ footer{border-top:3px solid var(--gold);padding:36px 0 54px;color:var(--muted);f
 footer .row{display:flex;gap:14px;align-items:center;margin-bottom:10px}
 footer .sun{display:block}
 footer b{font-family:var(--font-h);font-weight:600;font-size:1.1rem;color:var(--ink);display:block;line-height:1.2}
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto;scroll-snap-type:none}.hero,.sec .grid>*,.col,.wk,.tools div,.person,.slide-el,footer{opacity:1!important;transform:none!important;transition:none!important}}
 
 /* ============ Tampilan kaca bening (glass) ============ */
 :root{
@@ -198,6 +198,94 @@ footer{border-top:1px solid var(--hair)}
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.chat,.tblwrap,.col,.wk,.tools div,.person,.theme,.chip,header.top,.m.bot{background:var(--surface-solid)}}
 @media (prefers-reduced-transparency:reduce){.chat,.tblwrap,.col,.wk,.tools div,.person,.theme,.chip,header.top,.m.bot{background:var(--surface-solid);-webkit-backdrop-filter:none;backdrop-filter:none}}
 nav a,.theme{white-space:nowrap}
+
+/* ============ PPT-style slide transitions ============ */
+.hero,
+.sec,
+footer{
+  scroll-snap-align:start;
+  scroll-snap-stop:always;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+footer{min-height:auto;scroll-snap-align:end}
+
+.slide-el{
+  opacity:0;
+  transform:translateY(60px);
+  transition:opacity .8s cubic-bezier(.22,1,.36,1), transform .8s cubic-bezier(.22,1,.36,1);
+}
+.slide-el.vis{
+  opacity:1;
+  transform:translateY(0);
+}
+.slide-el:nth-child(2){transition-delay:.12s}
+.slide-el:nth-child(3){transition-delay:.24s}
+.slide-el:nth-child(4){transition-delay:.36s}
+.slide-el:nth-child(5){transition-delay:.48s}
+
+.sec .grid > *{
+  opacity:0;
+  transform:translateY(50px);
+  transition:opacity .7s cubic-bezier(.22,1,.36,1), transform .7s cubic-bezier(.22,1,.36,1);
+}
+.sec.in-view .grid > *{
+  opacity:1;
+  transform:translateY(0);
+}
+.sec .grid > *:nth-child(2){transition-delay:.18s}
+
+.cols > .col,
+.weeks > .wk,
+.tools > div,
+.person{
+  opacity:0;
+  transform:translateY(40px) scale(.97);
+  transition:opacity .6s cubic-bezier(.22,1,.36,1), transform .6s cubic-bezier(.22,1,.36,1);
+}
+.sec.in-view .col:nth-child(1){transition-delay:.25s}
+.sec.in-view .col:nth-child(2){transition-delay:.4s}
+.sec.in-view .wk:nth-child(1){transition-delay:.2s}
+.sec.in-view .wk:nth-child(2){transition-delay:.35s}
+.sec.in-view .wk:nth-child(3){transition-delay:.5s}
+.sec.in-view .tools div:nth-child(1){transition-delay:.2s}
+.sec.in-view .tools div:nth-child(2){transition-delay:.3s}
+.sec.in-view .tools div:nth-child(3){transition-delay:.4s}
+.sec.in-view .tools div:nth-child(4){transition-delay:.5s}
+.sec.in-view .person:nth-child(1){transition-delay:.15s}
+.sec.in-view .person:nth-child(2){transition-delay:.25s}
+.sec.in-view .person:nth-child(3){transition-delay:.35s}
+.sec.in-view .person:nth-child(4){transition-delay:.45s}
+.sec.in-view .person:nth-child(5){transition-delay:.55s}
+.sec.in-view .col,
+.sec.in-view .wk,
+.sec.in-view .tools div,
+.sec.in-view .person{
+  opacity:1;
+  transform:translateY(0) scale(1);
+}
+
+.hero{
+  opacity:0;
+  transform:scale(.96);
+  transition:opacity .9s cubic-bezier(.22,1,.36,1), transform .9s cubic-bezier(.22,1,.36,1);
+}
+.hero.in-view{
+  opacity:1;
+  transform:scale(1);
+}
+
+footer{
+  opacity:0;
+  transform:translateY(30px);
+  transition:opacity .6s ease, transform .6s ease;
+}
+footer.in-view{
+  opacity:1;
+  transform:translateY(0);
+}
 </style>
 </head>
 <body>
@@ -671,6 +759,17 @@ document.getElementById('prevX').onclick=function(){clearPhoto(false);};
 document.getElementById('lb').onclick=function(){this.hidden=true;};
 document.addEventListener('keydown',function(e){if(e.key==='Escape')document.getElementById('lb').hidden=true;});
 renderFilters();renderRows();start();loadTickets();
+
+/* ---------- PPT-style slide reveal ---------- */
+(function(){
+  var slides=document.querySelectorAll('.hero, .sec, footer');
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting) e.target.classList.add('in-view');
+    });
+  },{threshold:0.15});
+  slides.forEach(function(s){io.observe(s);});
+})();
 </script>
 </body>
 </html>
