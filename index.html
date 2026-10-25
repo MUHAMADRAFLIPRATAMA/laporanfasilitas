@@ -199,6 +199,51 @@ footer{border-top:1px solid var(--hair)}
 @media (prefers-reduced-transparency:reduce){.chat,.tblwrap,.col,.wk,.tools div,.person,.theme,.chip,header.top,.m.bot{background:var(--surface-solid);-webkit-backdrop-filter:none;backdrop-filter:none}}
 nav a,.theme{white-space:nowrap}
 
+@media(max-width:600px){
+  body{font-size:15px;overflow-x:hidden}
+  .wrap{padding:0 16px}
+  header.top .wrap{height:56px;gap:8px}
+  .brand{gap:8px;min-width:0}
+  .logo img{height:30px}
+  .brand b{font-size:.88rem}
+  .theme{padding:5px 9px;font-size:.72rem}
+  .hero{padding:34px 16px 28px;min-height:calc(100vh - 56px)}
+  .hero .grid{gap:24px}
+  .eyebrow{font-size:.62rem;letter-spacing:.1em;margin-bottom:12px}
+  .eyebrow::before{width:20px}
+  .hero h1{font-size:clamp(2rem,10vw,2.8rem)}
+  .lead{font-size:.92rem;line-height:1.55;margin:16px 0 22px}
+  .meta{font-size:.78rem;line-height:1.55;padding-top:12px}
+  .chat{height:390px;border-radius:18px}
+  .chat-head{padding:10px 13px;font-size:.92rem}
+  .chat-head span{font-size:.62rem}
+  .msgs{padding:12px;gap:8px}
+  .m{font-size:.82rem;padding:8px 10px}
+  .chips{padding:0 12px 8px}
+  .chip{padding:4px 9px;font-size:.7rem}
+  .chat form{gap:5px;padding:8px}
+  .chat input{padding:8px;font-size:.78rem}
+  .btn{padding:8px 11px;font-size:.78rem}
+  .sec{padding:40px 0;min-height:100vh}
+  .sec .grid{gap:18px}
+  .sec h2{font-size:1.55rem}
+  .sec .intro{font-size:.82rem}
+  .cols{gap:16px}
+  .col{padding:16px 18px}
+  .col h3{font-size:1.05rem}
+  .col p,.plain li,.wk p{font-size:.82rem}
+  .weeks{gap:14px}
+  .wk{padding:16px 18px}
+  .wk h3{font-size:1.05rem}
+  .tools{gap:8px}
+  .tools div{padding:12px 14px}
+  .person{grid-template-columns:1fr;gap:1px;padding:11px 14px;margin-bottom:7px}
+  .person b{font-size:.95rem}
+  .person .role{font-size:.76rem}
+  .person .nim{font-size:.7rem}
+  footer{padding:28px 0 40px;font-size:.75rem}
+}
+
 /* ============ PPT-style slide transitions ============ */
 .hero,
 .sec,
