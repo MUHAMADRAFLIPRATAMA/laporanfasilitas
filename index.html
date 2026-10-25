@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LaporFasilitas – Pengaduan Fasilitas Kampus Berbasis AI Chatbot</title>
-<meta name="description" content="Lapor kerusakan fasilitas kampus cukup dengan bercakap-cakap. Proyek Manajemen Proyek Kelompok 7, Universitas Muhammadiyah Yogyakarta.">
+<meta name="robots" content="noindex">
+<title>Admin – LaporFasilitas</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2219%22 fill=%22%23C99A1D%22/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#FBF9F4; --surface:#FFFFFF; --ink:#1F1B18; --muted:#6B635B; --line:#E4DED3; --soft:#F3EEE3;
@@ -32,111 +32,59 @@
   --high:#FF8A7A; --mid:#F0B544; --low:#6CCB95;
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:17px;line-height:1.65}
-h1,h2,h3{font-family:var(--font-h);font-weight:500;margin:0;line-height:1.15}
-a{color:inherit}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-b);font-size:16px;line-height:1.6}
+h1,h2{font-family:var(--font-h);font-weight:500;margin:0;line-height:1.15}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
-
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
 header.top{border-top:3px solid var(--gold);border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:0;z-index:5}
-header.top .wrap{display:flex;align-items:center;gap:18px;height:64px}
-.brand{display:flex;align-items:center;gap:12px;text-decoration:none;margin-right:auto}
+header.top .wrap{display:flex;align-items:center;gap:14px;height:64px}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;margin-right:auto}
 .logo img{height:38px;width:auto;display:block;background:#fff;border-radius:6px;padding:3px}
 .sun{display:none;color:var(--gold);line-height:0}
-.brand b{font-family:var(--font-h);font-weight:600;font-size:1.25rem;display:block;line-height:1.1}
-.brand small{display:block;color:var(--muted);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase}
-nav{display:flex;gap:22px;font-size:.92rem}
-nav a{text-decoration:none;color:var(--muted)}
-nav a:hover{color:var(--accent)}
-.theme{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:6px;padding:6px 12px;cursor:pointer;font:inherit;font-size:.85rem}
-@media(max-width:900px){nav{display:none}}
-@media(max-width:480px){.brand small{display:none}}
-
-.hero{padding:64px 24px 56px}
-.hero .grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start}
-@media(max-width:900px){.hero .grid{grid-template-columns:1fr;gap:40px}}
-.eyebrow{font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:18px;display:flex;align-items:center;gap:10px}
-.eyebrow::before{content:"";width:28px;height:2px;background:var(--gold)}
-.hero h1{font-size:clamp(2.5rem,5.6vw,3.9rem);letter-spacing:-.015em}
-.hero h1 em{color:var(--accent);font-style:italic}
-.lead{color:var(--muted);font-size:1.12rem;max-width:44ch;margin:22px 0 30px}
-.meta{border-top:1px solid var(--line);padding-top:16px;color:var(--muted);font-size:.95rem}
-.meta b{color:var(--ink);font-weight:600}
-
-.chat{background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;height:480px}
-.chat-head{padding:13px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:baseline;font-family:var(--font-h);font-size:1.1rem}
-.chat-head span{font-family:var(--font-b);color:var(--muted);font-size:.75rem;text-align:right}
-.msgs{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:10px}
-.m{max-width:86%;padding:10px 14px;border-radius:10px;font-size:.96rem;white-space:pre-wrap;word-wrap:break-word;line-height:1.5}
-.m.bot{background:var(--soft);border-bottom-left-radius:2px;align-self:flex-start}
-.m.me{background:var(--accent);color:var(--accent-ink);border-bottom-right-radius:2px;align-self:flex-end}
-.chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 18px 12px}
-.chip{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:5px 12px;font:inherit;font-size:.82rem;cursor:pointer}
-.chip:hover{border-color:var(--accent);color:var(--accent)}
-.chat form{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}
-.chat input{flex:1;min-width:0;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:6px;padding:10px 12px;font:inherit;font-size:.95rem}
+.brand b{font-family:var(--font-h);font-weight:600;font-size:1.2rem;display:block;line-height:1.1}
+.brand small{display:block;color:var(--muted);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase}
 .btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:6px;padding:10px 18px;font:inherit;font-weight:600;cursor:pointer}
+.ghost{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:6px;padding:6px 12px;cursor:pointer;font:inherit;font-size:.85rem;text-decoration:none}
+.ghost:hover{border-color:var(--accent);color:var(--accent)}
+@media(max-width:560px){.brand small{display:none}.hide-s{display:none}}
 
-.prev{display:flex;align-items:center;gap:10px;padding:8px 18px;border-top:1px solid var(--line);font-size:.85rem;color:var(--muted)}
-.prev[hidden]{display:none}
-.prev img{height:40px;width:40px;object-fit:cover;border-radius:4px}
-.prev span{flex:1}
-.thumb{height:44px;width:60px;object-fit:cover;border-radius:4px;cursor:zoom-in;display:block;border:1px solid var(--line)}
-.lb{position:fixed;inset:0;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;z-index:20;padding:20px;cursor:zoom-out}
-.lb[hidden]{display:none}
-.lb img{max-width:100%;max-height:100%;border-radius:6px}
-.sec{padding:72px 0;border-top:1px solid var(--line)}
-.sec .grid{display:grid;grid-template-columns:230px 1fr;gap:48px}
-@media(max-width:820px){.sec .grid{grid-template-columns:1fr;gap:24px}.sec{padding:52px 0}}
-.sec h2{font-size:1.9rem}
-.no{display:block;color:var(--gold);font-family:var(--font-h);font-style:italic;font-size:1.05rem;margin-bottom:6px}
-.sec .intro{color:var(--muted);margin:10px 0 0;font-size:.95rem}
-.cols{display:grid;grid-template-columns:1fr 1fr;gap:40px}
-@media(max-width:640px){.cols{grid-template-columns:1fr;gap:28px}}
-.col h3{font-size:1.3rem;padding-top:14px;border-top:2px solid var(--gold);margin-bottom:10px}
-.col.out h3{border-top-color:var(--line)}
-.col p{margin:0;color:var(--muted)}
-.plain{list-style:none;margin:0;padding:0}
-.plain li{padding:10px 0;border-bottom:1px solid var(--line)}
-.plain li:last-child{border-bottom:0}
-.stack>*+*{margin-top:30px}
+.login{max-width:400px;margin:72px auto;padding:32px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.login h1{font-size:1.8rem;margin-bottom:6px}
+.login p{color:var(--muted);margin:0 0 20px;font-size:.95rem}
+.login label{display:block;font-size:.85rem;font-weight:600;margin-bottom:6px}
+.login input{width:100%;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:6px;padding:11px 12px;font:inherit;margin-bottom:14px}
+.login .btn{width:100%}
+.err{color:var(--high);font-size:.9rem;min-height:1.4em;margin:12px 0 0}
 
-.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
-.filters .chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.adm{padding:40px 0 70px}
+.adm h1{font-size:2rem}
+.adm .sub{color:var(--muted);margin:4px 0 24px}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px}
+@media(max-width:820px){.cards{grid-template-columns:repeat(2,1fr)}}
+.card{background:var(--surface);border:1px solid var(--line);border-top:2px solid var(--gold);border-radius:6px;padding:14px 16px}
+.card small{display:block;color:var(--muted);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase}
+.card b{font-family:var(--font-h);font-weight:500;font-size:2rem;line-height:1.2}
+.card.hot b{color:var(--high)}
+.bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.bar input,.bar select{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:9px 11px;font:inherit;font-size:.92rem}
+.bar input{flex:1;min-width:180px}
+.count{color:var(--muted);font-size:.88rem;margin:0 0 10px}
 .tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
-.tbl{width:100%;border-collapse:collapse;font-size:.92rem}
-.tbl th,.tbl td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
-.tbl th{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.tbl{width:100%;border-collapse:collapse;font-size:.92rem;min-width:880px}
+.tbl th,.tbl td{text-align:left;padding:11px 13px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;white-space:nowrap}
 .tbl tr:last-child td{border-bottom:0}
+.tbl .tgl{color:var(--muted);font-size:.82rem;white-space:nowrap}
 .urg{font-weight:600}
 .urg.Tinggi{color:var(--high)}.urg.Sedang{color:var(--mid)}.urg.Rendah{color:var(--low)}
-.empty{padding:20px;color:var(--muted)}
-
-.weeks{display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
-@media(max-width:820px){.weeks{grid-template-columns:1fr;gap:26px}}
-.wk{border-top:2px solid var(--gold);padding-top:14px}
-.wk small{color:var(--accent);font-weight:600;letter-spacing:.1em;text-transform:uppercase;font-size:.72rem}
-.wk h3{font-size:1.25rem;margin:6px 0 8px}
-.wk p{margin:0;color:var(--muted);font-size:.96rem}
-.tools{display:grid;grid-template-columns:repeat(2,1fr);gap:0 40px;margin-top:30px}
-@media(max-width:640px){.tools{grid-template-columns:1fr}}
-.tools div{padding:12px 0;border-top:1px solid var(--line)}
-.tools b{font-weight:600}
-.tools span{display:block;color:var(--muted);font-size:.93rem}
-
-.person{display:grid;grid-template-columns:1.2fr 1.4fr auto;gap:16px;padding:14px 0;border-bottom:1px solid var(--line);align-items:baseline}
-.person:first-child{border-top:1px solid var(--line)}
-@media(max-width:640px){.person{grid-template-columns:1fr;gap:2px}}
-.person b{font-family:var(--font-h);font-weight:500;font-size:1.15rem}
-.person .role{color:var(--accent);font-size:.93rem}
-.person .nim{color:var(--muted);font-size:.85rem;font-variant-numeric:tabular-nums}
-
-footer{border-top:3px solid var(--gold);padding:36px 0 54px;color:var(--muted);font-size:.9rem}
-footer .row{display:flex;gap:14px;align-items:center;margin-bottom:10px}
-footer .sun{display:block}
-footer b{font-family:var(--font-h);font-weight:600;font-size:1.1rem;color:var(--ink);display:block;line-height:1.2}
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+.thumb{height:44px;width:60px;object-fit:cover;border-radius:4px;cursor:zoom-in;display:block;border:1px solid var(--line)}
+.tbl select{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:6px;padding:6px 8px;font:inherit;font-size:.88rem}
+.empty{padding:22px;color:var(--muted)}
+.lb{position:fixed;inset:0;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;z-index:20;padding:20px;cursor:zoom-out}
+.lb img{max-width:100%;max-height:100%;border-radius:6px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:6px;font-size:.9rem;opacity:0;pointer-events:none;transition:opacity .2s;z-index:30}
+.toast.on{opacity:1}
 
 /* ============ Tampilan kaca bening (glass) ============ */
 :root{
@@ -164,512 +112,200 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
     radial-gradient(55vmax 55vmax at 10% 6%, var(--blob1), transparent 62%),
     radial-gradient(50vmax 50vmax at 94% 16%, var(--blob2), transparent 62%),
     radial-gradient(58vmax 58vmax at 68% 98%, var(--blob3), transparent 62%)}
-.chat,.tblwrap,.col,.wk,.tools div,.person{background:var(--glass);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);border:1px solid var(--glass-border);box-shadow:var(--glass-shadow);border-radius:22px}
-.theme,.chip{background:var(--glass);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);border:1px solid var(--glass-border);box-shadow:var(--glass-shadow);border-radius:999px}
+.login,.card,.tblwrap{background:var(--glass);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);border:1px solid var(--glass-border);box-shadow:var(--glass-shadow);border-radius:22px}
+.ghost{background:var(--glass);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);border:1px solid var(--glass-border);box-shadow:var(--glass-shadow);border-radius:999px}
 header.top{background:var(--glass-strong);-webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);border-bottom:1px solid var(--glass-border);border-top:2px solid var(--gold);box-shadow:0 4px 24px rgba(70,50,30,.06)}
-.chat{border-radius:26px;overflow:hidden}
-.chat-head{border-bottom:1px solid var(--hair)}
-.chat form{border-top:1px solid var(--hair)}
-.msgs{scrollbar-width:thin}
-.m{border-radius:20px}
-.m.bot{background:var(--glass-strong);border:1px solid var(--glass-border);box-shadow:inset 0 1px 0 rgba(255,255,255,.35);border-bottom-left-radius:6px}
-.m.me{background:var(--accent);box-shadow:0 6px 16px rgba(122,31,43,.22), inset 0 1px 0 rgba(255,255,255,.28);border-bottom-right-radius:6px}
-.chat input{background:var(--glass-input);border:1px solid var(--line);border-radius:16px;box-shadow:inset 0 1px 2px rgba(0,0,0,.06)}
+.card{border-top:1px solid var(--glass-border)}
+.login{border-radius:26px}
+.login input{background:var(--glass-input);border:1px solid var(--line);border-radius:14px}
 .btn{border-radius:16px;background-image:linear-gradient(180deg,rgba(255,255,255,.30),rgba(255,255,255,0));box-shadow:0 6px 16px rgba(122,31,43,.22), inset 0 1px 0 rgba(255,255,255,.45)}
-.chip{padding:5px 13px}
-.filters .chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:transparent}
-.prev{border-top:1px solid var(--hair)}
-.tblwrap{border-radius:22px}
+.bar input,.bar select{background:var(--glass-input);border:1px solid var(--line);border-radius:14px;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
 .tbl th,.tbl td{border-bottom:1px solid var(--hair)}
+.tbl select{background:var(--glass-input);border:1px solid var(--line);border-radius:12px}
 .thumb{border-radius:10px;border:1px solid var(--glass-border)}
-.col{padding:22px 24px}
-.col h3{border-top:0;padding-top:0}
-.col.out{border-style:dashed}
-.plain li{border-bottom:1px solid var(--hair)}
-.wk{padding:22px 24px;border-top:1px solid var(--glass-border)}
-.tools{gap:12px 16px}
-.tools div{padding:16px 18px;border-top:1px solid var(--glass-border)}
-.person{padding:14px 20px;margin-bottom:10px;border-radius:18px}
-.person:first-child{border-top:1px solid var(--glass-border)}
-.sec{border-top:1px solid var(--hair)}
-footer{border-top:1px solid var(--hair)}
 .lb{background:rgba(10,8,6,.5);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
 .lb img{border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
-@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.chat,.tblwrap,.col,.wk,.tools div,.person,.theme,.chip,header.top,.m.bot{background:var(--surface-solid)}}
-@media (prefers-reduced-transparency:reduce){.chat,.tblwrap,.col,.wk,.tools div,.person,.theme,.chip,header.top,.m.bot{background:var(--surface-solid);-webkit-backdrop-filter:none;backdrop-filter:none}}
-nav a,.theme{white-space:nowrap}
+.toast{border-radius:999px;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){.login,.card,.tblwrap,.ghost,header.top{background:var(--surface-solid)}}
+@media (prefers-reduced-transparency:reduce){.login,.card,.tblwrap,.ghost,header.top{background:var(--surface-solid);-webkit-backdrop-filter:none;backdrop-filter:none}}
+.theme,.ghost{white-space:nowrap}
 </style>
 </head>
 <body>
 
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="#atas">
+    <a class="brand" href="/">
       <span class="logo"><img src="logo-umy.jpg" alt="Logo Universitas Muhammadiyah Yogyakarta" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><span class="sun"><svg viewBox="0 0 100 100" width="36" height="36" aria-hidden="true"><circle cx="50" cy="50" r="19" fill="currentColor"/><g stroke="currentColor" stroke-width="5" stroke-linecap="round"><line x1="50" y1="24" x2="50" y2="6" transform="rotate(0 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(30 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(60 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(90 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(120 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(150 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(180 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(210 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(240 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(270 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(300 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(330 50 50)"/></g></svg></span></span>
-      <span><b>LaporFasilitas</b><small>Universitas Muhammadiyah Yogyakarta</small></span>
+      <span><b>LaporFasilitas</b><small>Panel pengelola</small></span>
     </a>
-    <nav>
-      <a href="#dashboard">Dashboard</a>
-      <a href="#latar">Latar belakang</a>
-      <a href="#lingkup">Ruang lingkup</a>
-      <a href="#ai">AI</a>
-      <a href="#metode">Metode</a>
-      <a href="#rencana">Rencana kerja</a>
-      <a href="#tim">Tim</a>
-    </nav>
-    <button class="theme" id="theme" type="button" aria-label="Ganti mode terang atau gelap">Mode gelap</button>
+    <a class="ghost hide-s" href="/">Halaman utama</a>
+    <button class="ghost" id="logout" type="button" hidden>Keluar</button>
+    <button class="ghost" id="theme" type="button" aria-label="Ganti mode terang atau gelap">Mode gelap</button>
   </div>
 </header>
 
-<main id="atas">
-<div class="wrap hero">
-  <div class="grid">
-    <div>
-      <div class="eyebrow">Perencanaan Proyek Teknologi Informasi</div>
-      <h1>Rusak? <em>Ceritakan saja</em> ke chatbot.</h1>
-      <p class="lead">Sistem pengaduan fasilitas kampus berbasis AI web chatbot. Mahasiswa melapor dengan bahasa sehari-hari, AI menentukan kategori dan tingkat urgensi, lalu laporan masuk ke dashboard pengelola dengan kode tiket.</p>
-      <div class="meta">
-        <b>Universitas Muhammadiyah Yogyakarta</b><br>
-        Mata kuliah Manajemen Proyek<br>
-        Dosen pengampu: Muhammad Abdul Haqi<br>
-        Kelompok 7, Teknologi Informasi 2026
-      </div>
-    </div>
+<main class="wrap">
+  <section class="login" id="loginView">
+    <h1>Masuk pengelola</h1>
+    <p>Halaman ini untuk mengelola laporan fasilitas dan mengubah statusnya.</p>
+    <form id="loginForm">
+      <label for="pw">Kata sandi</label>
+      <input id="pw" type="password" autocomplete="current-password" required>
+      <button class="btn" type="submit">Masuk</button>
+      <p class="err" id="loginErr" role="alert"></p>
+    </form>
+  </section>
 
-    <div class="chat" aria-label="Demo chatbot LaporFasilitas">
-      <div class="chat-head">Chatbot LaporFasilitas <span id="mode">chatbot AI</span></div>
-      <div class="msgs" id="msgs" role="log" aria-live="polite"></div>
-      <div class="chips" id="chips"></div>
-      <div class="prev" id="prev" hidden><img id="prevImg" alt="Pratinjau foto"><span>Foto akan dilampirkan ke laporan</span><button type="button" class="chip" id="prevX">Hapus</button></div>
-      <form id="form">
-        <button type="button" class="chip" id="attach" title="Lampirkan foto bukti (opsional)">+ Foto</button>
-        <input id="foto" type="file" accept="image/*" hidden>
-        <input id="inp" type="text" placeholder="Contoh: AC di ruang 301 mati total" autocomplete="off" aria-label="Tulis laporan">
-        <button class="btn" type="submit">Kirim</button>
-      </form>
+  <section class="adm" id="adminView" hidden>
+    <h1>Dashboard pengelola</h1>
+    <p class="sub">Ubah status laporan lewat kolom Status. Perubahan langsung tersimpan di database.</p>
+    <div class="cards">
+      <div class="card"><small>Baru</small><b id="cBaru">0</b></div>
+      <div class="card"><small>Diproses</small><b id="cProses">0</b></div>
+      <div class="card"><small>Selesai</small><b id="cSelesai">0</b></div>
+      <div class="card hot"><small>Urgensi tinggi, belum selesai</small><b id="cHot">0</b></div>
     </div>
-  </div>
-</div>
-
-<section class="sec" id="dashboard">
-  <div class="wrap grid">
-    <div><span class="no">01</span><h2>Dashboard pengelola</h2><p class="intro">Laporan dari chatbot langsung muncul di sini. Klik status untuk mengubahnya.</p><p class="intro" id="dbnote"></p></div>
-    <div>
-      <div class="filters" id="filters" role="group" aria-label="Filter status"></div>
-      <div class="tblwrap"><table class="tbl">
-        <thead><tr><th>Tiket</th><th>Kategori</th><th>Lokasi</th><th>Deskripsi</th><th>Foto</th><th>Urgensi</th><th>Status</th></tr></thead>
-        <tbody id="rows"></tbody>
-      </table></div>
+    <div class="bar">
+      <input id="q" type="search" placeholder="Cari tiket, kategori, lokasi, atau deskripsi" aria-label="Cari laporan">
+      <select id="fStatus" aria-label="Filter status"><option value="">Semua status</option><option>Baru</option><option>Diproses</option><option>Selesai</option></select>
+      <select id="fUrg" aria-label="Filter urgensi"><option value="">Semua urgensi</option><option>Tinggi</option><option>Sedang</option><option>Rendah</option></select>
+      <button class="ghost" id="refresh" type="button">Muat ulang</button>
     </div>
-  </div>
-</section>
-
-<section class="sec" id="latar">
-  <div class="wrap grid">
-    <div><span class="no">02</span><h2>Latar belakang dan tujuan</h2><p class="intro">Tahap inisiasi proyek.</p></div>
-    <div class="cols">
-      <div class="col">
-        <h3>Latar belakang</h3>
-        <ul class="plain">
-          <li>Pelaporan kerusakan fasilitas kampus (AC, proyektor, Wi-Fi, dan lainnya) masih manual, jalurnya tidak jelas, dan informasi lokasinya sering tidak lengkap.</li>
-          <li>Solusinya: aplikasi web berbasis AI web chatbot, sehingga mahasiswa cukup melapor lewat percakapan bahasa sehari-hari.</li>
-        </ul>
-      </div>
-      <div class="col">
-        <h3>Tujuan proyek</h3>
-        <ul class="plain">
-          <li>Mempermudah pelaporan fasilitas kampus melalui percakapan dengan AI.</li>
-          <li>Menentukan tingkat urgensi laporan secara otomatis: Rendah, Sedang, atau Tinggi.</li>
-          <li>Menyimpan laporan ke basis data terpusat lengkap dengan kode tiket agar bisa dipantau pengelola.</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="sec" id="lingkup">
-  <div class="wrap grid">
-    <div><span class="no">03</span><h2>Ruang lingkup</h2><p class="intro">Batas yang disepakati agar proyek selesai tepat waktu.</p></div>
-    <div class="cols">
-      <div class="col">
-        <h3>Termasuk dalam proyek</h3>
-        <ul class="plain">
-          <li>Percakapan AI chatbot: kategori, lokasi, deskripsi aduan, dan kode tiket.</li>
-          <li>Penentuan tingkat urgensi laporan otomatis oleh AI.</li>
-          <li>Dashboard pengelola dengan filter status Baru, Diproses, Selesai.</li>
-          <li>Upload foto bukti kerusakan (opsional) yang tersimpan bersama laporan.</li>
-          <li>Aplikasi web responsif untuk desktop dan HP, dengan mode terang/gelap.</li>
-        </ul>
-      </div>
-      <div class="col out">
-        <h3>Di luar proyek</h3>
-        <ul class="plain">
-          <li>Login/SSO terintegrasi dengan sistem akademik kampus.</li>
-          <li>Upload video bukti kerusakan (foto bukti sudah didukung).</li>
-          <li>Notifikasi otomatis lewat email atau WhatsApp.</li>
-          <li>Aplikasi mobile native (Android/iOS).</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="sec" id="ai">
-  <div class="wrap grid">
-    <div><span class="no">04</span><h2>Jenis AI yang digunakan</h2><p class="intro">Dua jenis tugas AI lewat API.</p></div>
-    <div class="cols">
-      <div class="col"><h3>Text generation / conversational AI</h3><p>Menggerakkan alur obrolan chatbot yang memandu mahasiswa saat melapor.</p></div>
-      <div class="col"><h3>Text classification</h3><p>Membaca teks laporan untuk menentukan kategori fasilitas dan tingkat urgensi, lalu menyimpannya ke database secara otomatis.</p></div>
-    </div>
-  </div>
-</section>
-
-<section class="sec" id="metode">
-  <div class="wrap grid">
-    <div><span class="no">05</span><h2>Metode kerja dan tools kolaborasi</h2></div>
-    <div>
-      <div class="cols">
-        <div class="col"><h3>Design Thinking</h3><p>Dipakai saat inisiasi untuk memahami masalah pelaporan dan merancang alur percakapan chatbot.</p></div>
-        <div class="col"><h3>Agile / Scrum ringan</h3><p>Pengembangan dalam siklus pendek bertahap: Backlog, Sprint, Review, lalu Perbaiki.</p></div>
-      </div>
-      <div class="tools">
-        <div><b>Canva dan Word</b><span>Proposal, dokumen kebutuhan, dan catatan pengujian.</span></div>
-        <div><b>Trello</b><span>Papan Kanban: backlog, tugas sprint, PIC, dan status pengerjaan.</span></div>
-        <div><b>GitHub</b><span>Repository kode dan integrasi backend.</span></div>
-        <div><b>WhatsApp / Discord</b><span>Koordinasi harian dan rapat tim.</span></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="sec" id="rencana">
-  <div class="wrap grid">
-    <div><span class="no">06</span><h2>Rencana kerja</h2><p class="intro">Minggu 4 sampai 6.</p></div>
-    <div class="weeks">
-      <div class="wk"><small>Minggu 4</small><h3>Validasi dan rancang proses</h3><p>Observasi kebutuhan, penyusunan proposal, perancangan UI/UX di Figma, dan skema flowchart chatbot.</p></div>
-      <div class="wk"><small>Minggu 5</small><h3>Bangun sistem inti</h3><p>Tampilan web responsif, integrasi AI API (chatbot dan klasifikasi), dan database terpusat.</p></div>
-      <div class="wk"><small>Minggu 6</small><h3>Uji coba dan evaluasi</h3><p>QA testing, evaluasi akurasi respons AI, penyelesaian dashboard pengelola, dan penyusunan laporan akhir.</p></div>
-    </div>
-  </div>
-</section>
-
-<section class="sec" id="tim">
-  <div class="wrap grid">
-    <div><span class="no">07</span><h2>Anggota tim</h2><p class="intro">Kelompok 7, Teknologi Informasi 2026.</p></div>
-    <div>
-      <div class="person"><b>Anandya Arlys</b><span class="role">Project Manager / AI &amp; Backend Engineer</span><span class="nim">20240140002</span></div>
-      <div class="person"><b>Muhamad Rafli Pratama</b><span class="role">Analis &amp; Dokumentasi</span><span class="nim"></span></div>
-      <div class="person"><b>Faiq Rizky Maulana</b><span class="role">UI/UX Designer</span><span class="nim">20240140043</span></div>
-      <div class="person"><b>Rossa Kayla Isma Aziz</b><span class="role">Frontend Developer</span><span class="nim">20240140215</span></div>
-      <div class="person"><b>Danisha Novira Rausyanfikri</b><span class="role">Quality Assurance</span><span class="nim">20240140138</span></div>
-    </div>
-  </div>
-</section>
+    <p class="count" id="count"></p>
+    <div class="tblwrap"><table class="tbl">
+      <thead><tr><th>Tiket</th><th>Waktu</th><th>Kategori</th><th>Lokasi</th><th>Deskripsi</th><th>Foto</th><th>Urgensi</th><th>Status</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table></div>
+  </section>
 </main>
 
-<footer>
-  <div class="wrap">
-    <div class="row"><span class="sun"><svg viewBox="0 0 100 100" width="40" height="40" aria-hidden="true"><circle cx="50" cy="50" r="19" fill="currentColor"/><g stroke="currentColor" stroke-width="5" stroke-linecap="round"><line x1="50" y1="24" x2="50" y2="6" transform="rotate(0 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(30 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(60 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(90 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(120 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(150 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(180 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(210 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(240 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(270 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(300 50 50)"/><line x1="50" y1="24" x2="50" y2="6" transform="rotate(330 50 50)"/></g></svg></span><div><b>Universitas Muhammadiyah Yogyakarta</b>Unggul dan Islami</div></div>
-    Proyek mata kuliah Manajemen Proyek, Kelompok 7. Chatbot memakai AI lewat API bila sudah dikonfigurasi di server, dan beralih ke simulasi berbasis kata kunci bila belum tersambung.
-  </div>
-</footer>
-
 <div class="lb" id="lb" hidden><img id="lbImg" alt="Foto bukti kerusakan"></div>
+<div class="toast" id="toast" role="status"></div>
 
 <script>
-/* ---------- Tema ---------- */
+var API='/api/laporan', pw='', data=[];
+var $=function(id){return document.getElementById(id);};
+
+/* tema */
 (function(){
-  var root=document.documentElement, btn=document.getElementById('theme');
-  function isDark(){
-    var t=root.getAttribute('data-theme');
-    if(t) return t==='dark';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
-  }
-  function label(){ btn.textContent = isDark() ? 'Mode terang' : 'Mode gelap'; }
-  btn.addEventListener('click',function(){
-    root.setAttribute('data-theme', isDark() ? 'light' : 'dark');
-    label();
-  });
+  var root=document.documentElement, btn=$('theme');
+  function isDark(){var t=root.getAttribute('data-theme');if(t)return t==='dark';return window.matchMedia('(prefers-color-scheme: dark)').matches;}
+  function label(){btn.textContent=isDark()?'Mode terang':'Mode gelap';}
+  btn.onclick=function(){root.setAttribute('data-theme',isDark()?'light':'dark');label();};
   label();
 })();
 
-/* ---------- Data & dashboard ---------- */
-var SEED=[
-  {id:'LF-1042',kat:'Wi-Fi',lok:'Perpustakaan lantai 2',desk:'Wi-Fi sering putus saat jam sibuk',urg:'Sedang',st:'Diproses'},
-  {id:'LF-1038',kat:'Proyektor',lok:'Ruang 204',desk:'Proyektor tidak menyala sama sekali',urg:'Sedang',st:'Baru'},
-  {id:'LF-1031',kat:'Listrik',lok:'Lab Komputer 1',desk:'Stop kontak korsleting dan keluar percikan api',urg:'Tinggi',st:'Selesai'}
-];
-var filter='Semua', STATUS=['Baru','Diproses','Selesai'];
-
-function renderFilters(){
-  var box=document.getElementById('filters'); box.innerHTML='';
-  ['Semua'].concat(STATUS).forEach(function(s){
-    var b=document.createElement('button');
-    b.type='button'; b.className='chip'; b.textContent=s;
-    b.setAttribute('aria-pressed', String(filter===s));
-    b.onclick=function(){filter=s;renderFilters();renderRows();};
-    box.appendChild(b);
-  });
+function toast(msg){
+  var t=$('toast'); t.textContent=msg; t.classList.add('on');
+  clearTimeout(toast.h); toast.h=setTimeout(function(){t.classList.remove('on');},2800);
 }
-function cell(tr,text,cls){var td=document.createElement('td');td.textContent=text;if(cls)td.className=cls;tr.appendChild(td);return td;}
-var tickets=[], dbOn=false, adminPw='';
-function fromRow(r){return {id:r.kode_tiket,kat:r.kategori,lok:r.lokasi,desk:r.deskripsi,urg:r.urgensi,st:r.status,foto:r.foto_url||null};}
-function setNote(t){document.getElementById('dbnote').textContent=t;}
-function afterAdd(){filter='Semua';renderFilters();renderRows();}
-function localTicket(d){
-  var id;
-  do{ id='LF-'+(1000+Math.floor(Math.random()*9000)); }while(tickets.some(function(t){return t.id===id;}));
-  tickets.unshift({id:id,kat:d.kat,lok:d.lok,desk:d.desk,urg:d.urg,st:'Baru',foto:d.foto||null});
-  afterAdd();
-  return id;
-}
-var pendingPhoto=null, photoBubble=null;
-function sayImage(src){
-  var d=document.createElement('div'); d.className='m me';
-  var im=document.createElement('img'); im.src=src; im.alt='Foto bukti';
-  im.style.cssText='max-width:200px;max-height:200px;border-radius:6px;display:block';
-  d.appendChild(im); msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight;
-  return d;
-}
-function clearPhoto(keep){
-  if(!keep && photoBubble){photoBubble.remove();}
-  photoBubble=null;
-  pendingPhoto=null;
-  document.getElementById('prev').hidden=true;
-  document.getElementById('foto').value='';
-}
-function readPhoto(file,cb){
-  if(!/^image\//.test(file.type)){alert('File harus berupa gambar.');return;}
-  var img=new Image(), url=URL.createObjectURL(file);
-  img.onload=function(){
-    var sc=Math.min(1,1280/Math.max(img.width,img.height));
-    var c=document.createElement('canvas');
-    c.width=Math.round(img.width*sc); c.height=Math.round(img.height*sc);
-    c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-    URL.revokeObjectURL(url);
-    cb(c.toDataURL('image/jpeg',0.8));
-  };
-  img.onerror=function(){URL.revokeObjectURL(url);alert('Gambar tidak dapat dibaca. Coba foto dengan format JPG atau PNG.');};
-  img.src=url;
-}
-function uploadPhoto(dataUrl){
-  return fetch('/api/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:dataUrl.split(',')[1],type:'image/jpeg'})})
-    .then(function(r){
-      if(!r.ok) return r.json().catch(function(){return {};}).then(function(j){ throw new Error(j.detail||j.error||('HTTP '+r.status)); });
-      return r.json();
-    })
-    .then(function(j){return j.url;});
-}
-function openLb(src){document.getElementById('lbImg').src=src;document.getElementById('lb').hidden=false;}
-function createTicket(d,cb){
-  d.foto=pendingPhoto; clearPhoto(true);
-  if(!dbOn){
-    cb(localTicket(d));
-    if(d.foto) say('Foto terlampir di laporan (mode demo, hanya tersimpan di browser ini).','bot');
-    return;
-  }
-  var fotoErr=null;
-  var up=d.foto ? uploadPhoto(d.foto).catch(function(e){fotoErr=String((e&&e.message)||'tidak diketahui').slice(0,300);return null;}) : Promise.resolve(null);
-  up.then(function(url){
-    return fetch('/api/laporan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kategori:d.kat,lokasi:d.lok,deskripsi:d.desk,urgensi:d.urg,foto_url:url})});
-  })
-  .then(function(r){
-    if(!r.ok) return r.json().catch(function(){return {};}).then(function(j){ throw new Error(j.detail||j.error||('HTTP '+r.status)); });
-    return r.json();
-  })
-  .then(function(row){
-    tickets.unshift(fromRow(row));afterAdd();cb(row.kode_tiket);
-    if(d.foto && !fotoErr) say('Foto bukti ikut tersimpan bersama laporan.','bot');
-    if(fotoErr) say('Catatan: foto gagal diunggah, laporan tetap tersimpan tanpa foto.\n\nAlasan: '+fotoErr,'bot');
-  })
-  .catch(function(e){
-    cb(localTicket(d));
-    say('Catatan: laporan BELUM tersimpan ke database, hanya sementara di browser ini.\n\nAlasan: '+String((e&&e.message)||'tidak diketahui').slice(0,300),'bot');
-  });
-}
-function loadTickets(){
-  fetch('/api/laporan')
-    .then(function(r){if(!r.ok)throw new Error(r.status);return r.json();})
-    .then(function(rows){
-      if(!Array.isArray(rows)) throw new Error('format');
-      dbOn=true; tickets=rows.map(fromRow); renderRows();
-      setNote('Data tersimpan di database dan terlihat oleh semua pengelola.');
-    })
-    .catch(function(){
-      tickets=SEED.slice(); renderRows();
-      setNote('Mode demo: data hanya tersimpan di browser ini (database belum tersambung).');
-    });
-}
-function changeStatus(t){
-  var next=STATUS[(STATUS.indexOf(t.st)+1)%3];
-  if(!dbOn){t.st=next;renderRows();return;}
-  if(!adminPw){adminPw=prompt('Kata sandi pengelola untuk mengubah status:')||'';}
-  if(!adminPw) return;
-  fetch('/api/laporan',{method:'PATCH',headers:{'Content-Type':'application/json','x-admin-password':adminPw},body:JSON.stringify({kode_tiket:t.id,status:next})})
-    .then(function(r){
-      if(r.status===401||r.status===403){adminPw='';alert('Kata sandi salah atau belum diatur di server.');throw 0;}
-      if(!r.ok) throw new Error(r.status);
-      t.st=next; renderRows();
-    })
-    .catch(function(e){ if(e) alert('Gagal mengubah status.'); });
+function show(logged){ $('loginView').hidden=logged; $('adminView').hidden=!logged; $('logout').hidden=!logged; }
+function errMsg(r){
+  return r.json().catch(function(){return {};}).then(function(j){ throw new Error(j.detail||j.error||('HTTP '+r.status)); });
 }
 
-function renderRows(){
-  var tb=document.getElementById('rows'); tb.innerHTML='';
-  var list=tickets.filter(function(t){return filter==='Semua'||t.st===filter;});
+/* login */
+function checkLogin(p){
+  return fetch('/api/admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:p})})
+    .then(function(r){ if(!r.ok) return errMsg(r); return true; });
+}
+function logout(msg){
+  pw=''; sessionStorage.removeItem('lf_admin'); $('pw').value='';
+  show(false); $('loginErr').textContent=msg||'';
+}
+$('loginForm').onsubmit=function(e){
+  e.preventDefault(); $('loginErr').textContent='';
+  var p=$('pw').value;
+  checkLogin(p).then(function(){
+    pw=p; sessionStorage.setItem('lf_admin',p); show(true); load();
+  }).catch(function(err){ $('loginErr').textContent=err.message; });
+};
+$('logout').onclick=function(){logout('');};
+
+/* data */
+function load(){
+  $('count').textContent='Memuat data...';
+  fetch(API).then(function(r){ if(!r.ok) return errMsg(r); return r.json(); })
+    .then(function(rows){ if(!Array.isArray(rows)) throw new Error('Format data tidak dikenali'); data=rows; render(); })
+    .catch(function(e){ $('count').textContent='Gagal memuat data: '+e.message; });
+}
+function td(tr,text,cls){var c=document.createElement('td');c.textContent=text;if(cls)c.className=cls;tr.appendChild(c);return c;}
+
+function render(){
+  $('cBaru').textContent=data.filter(function(r){return r.status==='Baru';}).length;
+  $('cProses').textContent=data.filter(function(r){return r.status==='Diproses';}).length;
+  $('cSelesai').textContent=data.filter(function(r){return r.status==='Selesai';}).length;
+  $('cHot').textContent=data.filter(function(r){return r.urgensi==='Tinggi'&&r.status!=='Selesai';}).length;
+
+  var q=$('q').value.trim().toLowerCase(), fs=$('fStatus').value, fu=$('fUrg').value;
+  var list=data.filter(function(r){
+    if(fs&&r.status!==fs) return false;
+    if(fu&&r.urgensi!==fu) return false;
+    if(!q) return true;
+    return [r.kode_tiket,r.kategori,r.lokasi,r.deskripsi].join(' ').toLowerCase().indexOf(q)>-1;
+  });
+  $('count').textContent='Menampilkan '+list.length+' dari '+data.length+' laporan';
+
+  var tb=$('rows'); tb.innerHTML='';
   if(!list.length){
-    var tr=document.createElement('tr'),td=document.createElement('td');
-    td.colSpan=7;td.className='empty';td.textContent='Belum ada laporan dengan status ini.';
-    tr.appendChild(td);tb.appendChild(tr);return;
+    var tr=document.createElement('tr'), c=document.createElement('td');
+    c.colSpan=8; c.className='empty'; c.textContent='Tidak ada laporan yang cocok.';
+    tr.appendChild(c); tb.appendChild(tr); return;
   }
-  list.forEach(function(t){
+  list.forEach(function(r){
     var tr=document.createElement('tr');
-    cell(tr,t.id);cell(tr,t.kat);cell(tr,t.lok);cell(tr,t.desk);
+    td(tr,r.kode_tiket);
+    var tgl=''; try{tgl=new Date(r.dibuat_pada).toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'});}catch(e){}
+    td(tr,tgl,'tgl');
+    td(tr,r.kategori); td(tr,r.lokasi); td(tr,r.deskripsi);
     var tf=document.createElement('td');
-    if(t.foto){
-      var im=document.createElement('img');
-      im.src=t.foto; im.alt='Foto bukti '+t.id; im.className='thumb'; im.tabIndex=0;
-      im.onclick=function(){openLb(t.foto);};
-      im.onkeydown=function(e){if(e.key==='Enter')openLb(t.foto);};
+    if(r.foto_url){
+      var im=document.createElement('img'); im.className='thumb'; im.src=r.foto_url; im.alt='Foto bukti '+r.kode_tiket; im.tabIndex=0;
+      im.onclick=function(){openLb(r.foto_url);};
+      im.onkeydown=function(e){if(e.key==='Enter')openLb(r.foto_url);};
       tf.appendChild(im);
     }else{ tf.textContent='-'; }
     tr.appendChild(tf);
-    cell(tr,t.urg,'urg '+t.urg);
-    var td=document.createElement('td');
-    var b=document.createElement('button');
-    b.type='button';b.className='chip';
-    b.textContent=t.st;
-    b.title='Klik untuk mengubah status';
-    b.setAttribute('aria-label','Status '+t.id+': '+t.st+'. Klik untuk mengubah.');
-    b.onclick=function(){changeStatus(t);};
-    td.appendChild(b);tr.appendChild(td);tb.appendChild(tr);
-  });
-}
-
-/* ---------- Chatbot simulasi ---------- */
-var KAT=[
-  ['AC',/\b(ac|pendingin|kipas)\b/i],
-  ['Proyektor',/proyektor|infocus|lcd/i],
-  ['Wi-Fi',/wi-?fi|internet|jaringan|sinyal/i],
-  ['Listrik',/listrik|lampu|stop ?kontak|korsleting|colokan/i],
-  ['Air & toilet',/air|toilet|wc|keran|kamar mandi|wastafel/i],
-  ['Furnitur',/kursi|meja|papan tulis|pintu|jendela/i]
-];
-var URG_T=/korsleting|percikan|api|asap|bocor|banjir|mati total|berbahaya|tersengat|ambruk|roboh/i;
-var URG_R=/kotor|lecet|kurang|sedikit|goyang|cat |bau/i;
-var LOK=/\b(ruang(?:an)?|lab(?:oratorium)?|gedung|aula|perpustakaan|kelas|lantai|kantin|musala|masjid)\b[\s\w.\-]{0,24}/i;
-
-var msgs=document.getElementById('msgs'), inp=document.getElementById('inp'), chips=document.getElementById('chips');
-var draft=null;
-
-function say(text,who){
-  var d=document.createElement('div'); d.className='m '+who; d.textContent=text;
-  msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight;
-  return d;
-}
-function setChips(list){
-  chips.innerHTML='';
-  list.forEach(function(t){
-    var b=document.createElement('button');b.type='button';b.className='chip';b.textContent=t;
-    b.onclick=function(){inp.value=t;handle(t);};
-    chips.appendChild(b);
-  });
-}
-function start(){
-  draft=null;
-  say('Halo! Fasilitas apa yang bermasalah? Ceritakan dengan bahasa sehari-hari, lengkap dengan lokasinya kalau bisa.','bot');
-  setChips(['AC di ruang 301 mati total','Proyektor Lab Komputer 2 gambarnya buram','Wi-Fi di perpustakaan lemot']);
-}
-function finish(){
-  var d=draft;
-  draft={done:true};
-  createTicket({kat:d.kat,lok:d.lok,desk:d.desk,urg:d.urg},function(id){
-    say('Laporan tercatat.\nKode tiket: '+id+'\nKategori: '+d.kat+'\nLokasi: '+d.lok+'\nUrgensi: '+d.urg+'\n\nPengelola bisa melihatnya di dashboard di bawah.','bot');
-    setChips(['Buat laporan baru']);
-  });
-}
-function handleLocal(text){
-  text=text.trim(); if(!text) return;
-  say(text,'me'); inp.value=''; chips.innerHTML='';
-  if(text==='Buat laporan baru'||(draft&&draft.done)){ draft=null; if(text==='Buat laporan baru'){start();return;} }
-  if(!draft){
-    var kat=null;
-    for(var i=0;i<KAT.length;i++){ if(KAT[i][1].test(text)){kat=KAT[i][0];break;} }
-    var m=text.match(LOK);
-    var urg=URG_T.test(text)?'Tinggi':(URG_R.test(text)?'Rendah':'Sedang');
-    draft={kat:kat,lok:m?m[0].trim():null,desk:text,urg:urg};
-    if(!draft.kat){ draft.kat='Lainnya'; }
-  }else if(draft.needLok){
-    draft.lok=text; draft.needLok=false;
-  }
-  if(!draft.lok){
-    draft.needLok=true;
-    setTimeout(function(){say('Kategori terdeteksi: '+draft.kat+'. Di mana lokasinya? Sebutkan gedung atau ruangannya.','bot');},350);
-    return;
-  }
-  setTimeout(finish,450);
-}
-/* ---------- Chatbot terhubung AI (lewat /api/chat), cadangan: simulasi ---------- */
-var chatHistory=[], useLocal=false, busy=false;
-
-function saveTicket(l){
-  chatHistory=[];
-  createTicket({kat:l.kategori,lok:l.lokasi,desk:l.deskripsi,urg:l.urgensi},function(id){
-    say('Kode tiket: '+id+'\nKategori: '+l.kategori+'\nLokasi: '+l.lokasi+'\nUrgensi: '+l.urgensi+'\n\nLaporan sudah masuk ke dashboard pengelola.','bot');
-    setChips(['Buat laporan baru']);
-  });
-}
-
-function handle(text){
-  text=text.trim(); if(!text||busy) return;
-  if(text==='Buat laporan baru'){
-    say(text,'me'); inp.value=''; chips.innerHTML=''; chatHistory=[]; draft=null; start(); return;
-  }
-  if(useLocal){ handleLocal(text); return; }
-  var mine=say(text,'me'); inp.value=''; chips.innerHTML='';
-  chatHistory.push({role:'user',content:text});
-  busy=true;
-  var t0=performance.now();
-  var wait=say('Mengetik...','bot');
-  fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:chatHistory})})
-    .then(function(r){
-      if(!r.ok) return r.json().catch(function(){return {};}).then(function(j){ throw new Error(j.detail||j.error||('HTTP '+r.status)); });
-      return r.json();
-    })
-    .then(function(d){
-      wait.remove(); busy=false;
-      var tot=((performance.now()-t0)/1000).toFixed(1);
-      document.getElementById('mode').textContent='chatbot AI · total '+tot+' dtk'+(d.ms?' · AI '+(d.ms/1000).toFixed(1)+' dtk':'')+(d.model?' · '+d.model:'')+(d.think?' · pikir '+d.think+' token':'');
-      chatHistory.push({role:'assistant',content:d.reply});
-      say(d.reply,'bot');
-      if(d.laporan) saveTicket(d.laporan);
-    })
-    .catch(function(err){
-      wait.remove(); mine.remove(); busy=false; useLocal=true; chatHistory=[];
-      document.getElementById('mode').textContent='mode simulasi';
-      say('AI belum tersambung, jadi chatbot memakai mode simulasi.\n\nAlasan: '+String((err&&err.message)||'tidak diketahui').slice(0,300),'bot');
-      handleLocal(text);
+    td(tr,r.urgensi,'urg '+r.urgensi);
+    var ts=document.createElement('td'), sel=document.createElement('select');
+    sel.setAttribute('aria-label','Status '+r.kode_tiket);
+    ['Baru','Diproses','Selesai'].forEach(function(s){
+      var o=document.createElement('option'); o.value=s; o.textContent=s; if(s===r.status)o.selected=true; sel.appendChild(o);
     });
+    sel.onchange=function(){ changeStatus(r,sel); };
+    ts.appendChild(sel); tr.appendChild(ts);
+    tb.appendChild(tr);
+  });
 }
 
-document.getElementById('form').addEventListener('submit',function(e){e.preventDefault();handle(inp.value);});
+function changeStatus(r,sel){
+  var next=sel.value, prev=r.status;
+  sel.disabled=true;
+  fetch(API,{method:'PATCH',headers:{'Content-Type':'application/json','x-admin-password':pw},body:JSON.stringify({kode_tiket:r.kode_tiket,status:next})})
+    .then(function(res){
+      if(res.status===401||res.status===403){ logout('Sesi berakhir atau kata sandi berubah. Silakan masuk lagi.'); throw 0; }
+      if(!res.ok) return errMsg(res);
+      r.status=next; toast('Status '+r.kode_tiket+' diubah menjadi '+next); render();
+    })
+    .catch(function(e){ sel.value=prev; sel.disabled=false; if(e) toast('Gagal mengubah status: '+e.message); });
+}
 
-document.getElementById('attach').onclick=function(){document.getElementById('foto').click();};
-document.getElementById('foto').onchange=function(){
-  var f=this.files&&this.files[0]; if(!f) return;
-  readPhoto(f,function(dataUrl){
-    if(photoBubble){photoBubble.remove();}
-    pendingPhoto=dataUrl;
-    document.getElementById('prevImg').src=dataUrl;
-    document.getElementById('prev').hidden=false;
-    photoBubble=sayImage(dataUrl);
-    say('Foto diterima. Foto akan ikut tersimpan ke laporan setelah laporan selesai dibuat. Silakan lanjut ceritakan masalahnya.','bot');
-  });
-};
-document.getElementById('prevX').onclick=function(){clearPhoto(false);};
-document.getElementById('lb').onclick=function(){this.hidden=true;};
-document.addEventListener('keydown',function(e){if(e.key==='Escape')document.getElementById('lb').hidden=true;});
-renderFilters();renderRows();start();loadTickets();
+/* foto */
+function openLb(src){$('lbImg').src=src;$('lb').hidden=false;}
+$('lb').onclick=function(){this.hidden=true;};
+document.addEventListener('keydown',function(e){if(e.key==='Escape')$('lb').hidden=true;});
+
+/* filter */
+$('q').oninput=render; $('fStatus').onchange=render; $('fUrg').onchange=render;
+$('refresh').onclick=load;
+
+/* masuk otomatis bila sesi masih tersimpan di tab ini */
+(function(){
+  var saved=sessionStorage.getItem('lf_admin');
+  if(!saved) return;
+  checkLogin(saved).then(function(){ pw=saved; show(true); load(); }).catch(function(){ sessionStorage.removeItem('lf_admin'); });
+})();
 </script>
 </body>
 </html>
