@@ -359,11 +359,15 @@ module.exports = async (req, res) => {
     return res.status(400).json({ error: 'Pesan kosong' });
   }
   try {
-    const provider = (process.env.AI_PROVIDER || 'anthropic').toLowerCase();
+     const requestedProvider = req.body && req.body.provider;
+     const provider = ['gemini', '9router'].includes(String(requestedProvider).toLowerCase())
+       ? String(requestedProvider).toLowerCase()
+       : (process.env.AI_PROVIDER || 'anthropic').toLowerCase();
     const t0 = Date.now();
     const info = {};
     let text;
      if (provider === 'gemini' && !process.env.GEMINI_API_KEY) throw new Error('GEMINI_API_KEY belum terbaca di server (cek nama variabel dan Redeploy)');
+     if (provider === '9router' && !process.env.NINEROUTER_API_KEY) throw new Error('NINEROUTER_API_KEY belum terbaca di server (cek nama variabel dan Redeploy)');
      if (provider === 'gemini') {
        try {
          text = await callGemini(messages, info);
