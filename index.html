@@ -159,6 +159,7 @@ footer b{font-family:var(--font-h);font-weight:600;font-size:1.1rem;color:var(--
   --glass-shadow:0 10px 34px rgba(0,0,0,.40), inset 0 1px 0 rgba(255,255,255,.10);
   --blob1:rgba(227,179,65,.20); --blob2:rgba(170,45,70,.30); --blob3:rgba(60,95,170,.26);
 }
+body::after{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;background:url('logo-umy.png') center 72px / min(82vw,360px) auto no-repeat}
 body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
   background:
     radial-gradient(55vmax 55vmax at 10% 6%, var(--blob1), transparent 62%),
@@ -200,7 +201,7 @@ footer{border-top:1px solid var(--hair)}
 nav a,.theme{white-space:nowrap}
 
 @media(max-width:600px){
-  body{font-size:15px;overflow-x:hidden;background-image:url('logo-umy.png');background-repeat:no-repeat;background-position:center 72px;background-size:min(82vw,360px) auto;background-attachment:fixed}
+  body{font-size:15px;overflow-x:hidden}
   .wrap{padding:0 16px}
   header.top .wrap{height:56px;gap:8px}
   .brand{gap:8px;min-width:0}
