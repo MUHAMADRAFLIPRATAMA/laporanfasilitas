@@ -2,12 +2,7 @@
 // Kunci API disimpan di Environment Variables Vercel, tidak pernah dikirim ke browser.
 //
 // Variabel yang dipakai:
-//   AI_PROVIDER        "anthropic" (default), "gemini", "9router", atau "huggingface"
-//   AI_FALLBACK_PROVIDER opsional, isi "9router" untuk cadangan Gemini
-//   NINEROUTER_API_KEY wajib jika provider/fallback = 9router
-//   NINEROUTER_BASE_URL opsional, default https://api.9router.com/v1
-//   NINEROUTER_MODEL   opsional, default gemini-2.0-flash
-//   NINEROUTER_TIMEOUT_MS opsional, default 15000
+//   AI_PROVIDER        "anthropic" (default), "gemini", atau "huggingface"
 //   GEMINI_API_KEY     wajib jika provider = gemini
 //   GEMINI_THINKING_BUDGET opsional, isi 0 untuk mempercepat (jika model mendukung)
 //   GEMINI_MODEL       opsional, default gemini-flash-latest (alias model Flash terbaru)
@@ -98,41 +93,6 @@ async function callClaude(messages, info) {
   const d = await r.json();
   if (info) info.model = model;
   return d.content.filter((b) => b.type === 'text').map((b) => b.text).join('');
-}
-
-async function call9Router(messages, info) {
-  const key = process.env.NINEROUTER_API_KEY;
-  if (!key) throw new Error('NINEROUTER_API_KEY belum terbaca di server (cek nama variabel dan Redeploy)');
-  const base = (process.env.NINEROUTER_BASE_URL || 'https://api.9router.com/v1').replace(/\/$/, '');
-  const model = process.env.NINEROUTER_MODEL || 'gemini-2.0-flash';
-  const ctrl = new AbortController();
-  const timeout = Number(process.env.NINEROUTER_TIMEOUT_MS) || 15000;
-  const timer = setTimeout(() => ctrl.abort(), timeout);
-  let r;
-  try {
-    r = await fetch(base + '/chat/completions', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        authorization: 'Bearer ' + key,
-      },
-      signal: ctrl.signal,
-      body: JSON.stringify({
-        model,
-        max_tokens: 600,
-        messages: [{ role: 'system', content: SYSTEM }, ...messages],
-      }),
-    });
-  } catch (e) {
-    if (e && e.name === 'AbortError') throw new Error('9router terlalu lama menjawab');
-    throw e;
-  } finally {
-    clearTimeout(timer);
-  }
-  if (!r.ok) throw new Error('9router API ' + r.status + ': ' + (await r.text()));
-  const d = await r.json();
-  if (info) info.model = model;
-  return d.choices[0].message.content;
 }
 
 async function callHuggingFace(messages) {
@@ -359,28 +319,13 @@ module.exports = async (req, res) => {
     return res.status(400).json({ error: 'Pesan kosong' });
   }
   try {
-     const requestedProvider = req.body && req.body.provider;
-     const provider = ['gemini', '9router'].includes(String(requestedProvider).toLowerCase())
-       ? String(requestedProvider).toLowerCase()
-       : (process.env.AI_PROVIDER || 'anthropic').toLowerCase();
+    const provider = (process.env.AI_PROVIDER || 'anthropic').toLowerCase();
     const t0 = Date.now();
     const info = {};
     let text;
      if (provider === 'gemini' && !process.env.GEMINI_API_KEY) throw new Error('GEMINI_API_KEY belum terbaca di server (cek nama variabel dan Redeploy)');
-     if (provider === '9router' && !process.env.NINEROUTER_API_KEY) throw new Error('NINEROUTER_API_KEY belum terbaca di server (cek nama variabel dan Redeploy)');
-     if (provider === 'gemini') {
-       try {
-         text = await callGemini(messages, info);
-       } catch (e) {
-         if ((process.env.AI_FALLBACK_PROVIDER || '').toLowerCase() !== '9router') throw e;
-         info.fallback = true;
-         info.provider = '9router';
-         text = await call9Router(messages, info);
-       }
-     } else if (provider === '9router') {
-       info.provider = '9router';
-       text = await call9Router(messages, info);
-     } else if (provider === 'huggingface') text = await callHuggingFace(messages);
+     if (provider === 'gemini') text = await callGemini(messages, info);
+     else if (provider === 'huggingface') text = await callHuggingFace(messages);
      else text = await callClaude(messages, info);
     const out = parseReply(text);
     out.ms = Date.now() - t0; // lama waktu panggilan ke AI (milidetik)

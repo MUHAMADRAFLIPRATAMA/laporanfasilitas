@@ -33,7 +33,7 @@
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth;scroll-snap-type:y mandatory;overflow-y:scroll}
-body{margin:0;background:#fff url('logo-umy.png') no-repeat center center fixed;background-size:min(82vw,360px) auto;color:var(--ink);font-family:var(--font-b);font-size:17px;line-height:1.65}
+body{margin:0;background:var(--bg) url('umy.jpeg') no-repeat center center fixed;background-size:cover;color:var(--ink);font-family:var(--font-b);font-size:17px;line-height:1.65}
 h1,h2,h3{font-family:var(--font-h);font-weight:500;margin:0;line-height:1.15}
 a{color:inherit}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
@@ -159,7 +159,6 @@ footer b{font-family:var(--font-h);font-weight:600;font-size:1.1rem;color:var(--
   --glass-shadow:0 10px 34px rgba(0,0,0,.40), inset 0 1px 0 rgba(255,255,255,.10);
   --blob1:rgba(227,179,65,.20); --blob2:rgba(170,45,70,.30); --blob3:rgba(60,95,170,.26);
 }
-body::after{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;background:#fff url('logo-umy.png') center center / min(82vw,360px) auto no-repeat}
 body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
   background:
     radial-gradient(55vmax 55vmax at 10% 6%, var(--blob1), transparent 62%),
@@ -372,7 +371,7 @@ footer.in-view{
     </div>
 
     <div class="chat" aria-label="Demo chatbot LaporFasilitas">
-       <div class="chat-head">Chatbot LaporFasilitas <span><label for="provider">Model: </label><select id="provider" class="chip"><option value="gemini">Gemini</option><option value="9router">9router</option></select><span id="mode">chatbot AI</span></span></div>
+       <div class="chat-head">Chatbot LaporFasilitas <span id="mode">chatbot AI</span></div>
       <div class="msgs" id="msgs" role="log" aria-live="polite"></div>
       <div class="chips" id="chips"></div>
       <div class="prev" id="prev" hidden><img id="prevImg" alt="Pratinjau foto"><span>Foto akan dilampirkan ke laporan</span><button type="button" class="chip" id="prevX">Hapus</button></div>
@@ -748,7 +747,6 @@ function handleLocal(text){
 }
 /* ---------- Chatbot terhubung AI (lewat /api/chat), cadangan: simulasi ---------- */
 var chatHistory=[], useLocal=false, busy=false;
-var providerSelect=document.getElementById('provider');
 
 function saveTicket(l){
   chatHistory=[];
@@ -769,7 +767,7 @@ function handle(text){
   busy=true;
   var t0=performance.now();
   var wait=say('Mengetik...','bot');
-  fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:chatHistory,provider:providerSelect.value})})
+  fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:chatHistory})})
     .then(function(r){
       if(!r.ok) return r.json().catch(function(){return {};}).then(function(j){ throw new Error(j.detail||j.error||('HTTP '+r.status)); });
       return r.json();
