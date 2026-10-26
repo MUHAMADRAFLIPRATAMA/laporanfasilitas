@@ -159,7 +159,7 @@ header.top{background:var(--glass-strong);-webkit-backdrop-filter:blur(24px) sat
 
   <section class="adm" id="adminView" hidden>
     <h1>Dashboard pengelola</h1>
-    <p class="sub">Ubah status laporan lewat kolom Status. Perubahan langsung tersimpan di database.</p>
+    <p class="sub">Ubah status atau hapus laporan. Perubahan langsung tersimpan di database.</p>
     <div class="cards">
       <div class="card"><small>Baru</small><b id="cBaru">0</b></div>
       <div class="card"><small>Diproses</small><b id="cProses">0</b></div>
@@ -174,7 +174,7 @@ header.top{background:var(--glass-strong);-webkit-backdrop-filter:blur(24px) sat
     </div>
     <p class="count" id="count"></p>
     <div class="tblwrap"><table class="tbl">
-      <thead><tr><th>Tiket</th><th>Waktu</th><th>Kategori</th><th>Lokasi</th><th>Deskripsi</th><th>Foto</th><th>Urgensi</th><th>Status</th></tr></thead>
+      <thead><tr><th>Tiket</th><th>Waktu</th><th>Kategori</th><th>Lokasi</th><th>Deskripsi</th><th>Foto</th><th>Urgensi</th><th>Status</th><th>Aksi</th></tr></thead>
       <tbody id="rows"></tbody>
     </table></div>
   </section>
@@ -250,7 +250,7 @@ function render(){
   var tb=$('rows'); tb.innerHTML='';
   if(!list.length){
     var tr=document.createElement('tr'), c=document.createElement('td');
-    c.colSpan=8; c.className='empty'; c.textContent='Tidak ada laporan yang cocok.';
+    c.colSpan=9; c.className='empty'; c.textContent='Tidak ada laporan yang cocok.';
     tr.appendChild(c); tb.appendChild(tr); return;
   }
   list.forEach(function(r){
@@ -274,9 +274,26 @@ function render(){
       var o=document.createElement('option'); o.value=s; o.textContent=s; if(s===r.status)o.selected=true; sel.appendChild(o);
     });
     sel.onchange=function(){ changeStatus(r,sel); };
-    ts.appendChild(sel); tr.appendChild(ts);
-    tb.appendChild(tr);
+     ts.appendChild(sel); tr.appendChild(ts);
+     var ta=document.createElement('td'), del=document.createElement('button');
+     del.type='button'; del.className='ghost'; del.textContent='Hapus';
+     del.onclick=function(){ deleteReport(r,del); };
+     ta.appendChild(del); tr.appendChild(ta);
+     tb.appendChild(tr);
   });
+}
+
+function deleteReport(r,btn){
+  if(!window.confirm('Hapus laporan '+r.kode_tiket+' secara permanen?')) return;
+  btn.disabled=true;
+  fetch(API,{method:'DELETE',headers:{'Content-Type':'application/json','x-admin-password':pw},body:JSON.stringify({kode_tiket:r.kode_tiket})})
+    .then(function(res){
+      if(res.status===401||res.status===403){ logout('Sesi berakhir atau kata sandi berubah. Silakan masuk lagi.'); throw 0; }
+      if(!res.ok) return errMsg(res);
+      data=data.filter(function(x){return x.kode_tiket!==r.kode_tiket;});
+      toast('Laporan '+r.kode_tiket+' dihapus'); render();
+    })
+    .catch(function(e){ btn.disabled=false; if(e) toast('Gagal menghapus laporan: '+e.message); });
 }
 
 function changeStatus(r,sel){

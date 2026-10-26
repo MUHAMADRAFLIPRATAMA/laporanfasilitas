@@ -2,6 +2,7 @@
 //   GET    -> daftar laporan
 //   POST   -> simpan laporan baru (kode tiket dibuat server)
 //   PATCH  -> ubah status laporan (butuh kata sandi pengelola)
+//   DELETE -> hapus laporan (butuh kata sandi pengelola)
 //
 // Variabel lingkungan (Vercel -> Settings -> Environment Variables):
 //   SUPABASE_URL         contoh: https://abcdxyz.supabase.co
@@ -74,6 +75,23 @@ module.exports = async (req, res) => {
         return res.status(201).json(rows[0]);
       }
       throw new Error('Gagal membuat kode tiket unik');
+    }
+
+    // ---------- DELETE: hapus laporan (khusus pengelola) ----------
+    if (req.method === 'DELETE') {
+      const admin = process.env.ADMIN_PASSWORD;
+      if (!admin) return res.status(403).json({ error: 'ADMIN_PASSWORD belum diatur di server' });
+      if (req.headers['x-admin-password'] !== admin) return res.status(401).json({ error: 'Kata sandi salah' });
+      const kode = String((req.body && req.body.kode_tiket) || '');
+      if (!/^LF-\d{4}$/.test(kode)) return res.status(400).json({ error: 'Kode tiket tidak valid' });
+      const r = await fetch(base + '?kode_tiket=eq.' + encodeURIComponent(kode), {
+        method: 'DELETE',
+        headers: { ...headers, Prefer: 'return=representation' },
+      });
+      if (!r.ok) throw new Error('Supabase ' + r.status + ': ' + (await r.text()));
+      const rows = await r.json();
+      if (!rows.length) return res.status(404).json({ error: 'Tiket tidak ditemukan' });
+      return res.status(200).json({ ok: true, kode_tiket: kode });
     }
 
     // ---------- PATCH: ubah status (khusus pengelola) ----------
