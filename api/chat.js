@@ -141,7 +141,7 @@ function rankModels(names) {
 
 async function callGemini(messages, info) {
   const base = { maxOutputTokens: 600, responseMimeType: 'application/json' };
-  const TMO = Number(process.env.GEMINI_TIMEOUT_MS) || 10000; // batas waktu per model
+  const TMO = Number(process.env.GEMINI_TIMEOUT_MS) || 12000;
 
   // Percobaan pertama meminta proses berpikir seminimal mungkin (model Gemini 3: thinkingLevel),
   // lalu thinkingBudget 0 (model Gemini 2.5), lalu tanpa pengaturan berpikir sama sekali.
@@ -170,12 +170,18 @@ async function callGemini(messages, info) {
     let text = '';
     try {
       for (let i = goodIdx[model] || 0; i < variants.length; i++) {
-        r = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json', 'x-goog-api-key': process.env.GEMINI_API_KEY },
-          signal: ctrl.signal,
-          body: makeBody(variants[i]),
-        });
+        try {
+          r = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json', 'x-goog-api-key': process.env.GEMINI_API_KEY },
+            signal: ctrl.signal,
+            body: makeBody(variants[i]),
+          });
+        } catch (e) {
+          if (e && e.name === 'AbortError') return { ok: false, status: 'timeout', text: 'timeout' };
+          if (i + 1 < variants.length) continue;
+          throw e;
+        }
         if (r.ok) { goodIdx[model] = i; break; }
         text = await r.text();
         if (r.status !== 400) break;
@@ -319,7 +325,7 @@ module.exports = async (req, res) => {
     return res.status(400).json({ error: 'Pesan kosong' });
   }
   try {
-    const provider = (process.env.AI_PROVIDER || 'anthropic').toLowerCase();
+    const provider = (process.env.AI_PROVIDER || 'gemini').toLowerCase();
     const t0 = Date.now();
     const info = {};
     let text;
