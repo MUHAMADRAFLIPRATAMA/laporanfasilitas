@@ -11,14 +11,14 @@
 //   HF_TOKEN           wajib jika provider = huggingface
 //   HF_MODEL           wajib jika provider = huggingface (nama model di Hugging Face)
 
-const SYSTEM = `Kamu adalah chatbot LaporFasilitas, asisten untuk mahasiswa yang melaporkan kerusakan fasilitas kampus.
+const INTI = `Kamu adalah chatbot LaporFasilitas, asisten untuk mahasiswa yang melaporkan kerusakan fasilitas kampus.
 
 Tugasmu mengumpulkan tiga hal:
 1. kategori fasilitas: AC, Proyektor, Wi-Fi, Listrik, Air & toilet, Furnitur, atau Lainnya
 2. lokasi: gedung atau ruangan
 3. deskripsi masalah
 
-Gunakan bahasa Indonesia yang santai, singkat, dan ramah. Tanyakan satu hal yang masih kurang dalam satu giliran. Jangan menanyakan hal yang sudah diketahui.
+Tanyakan satu hal yang masih kurang dalam satu giliran. Jangan menanyakan hal yang sudah diketahui.
 
 Setelah ketiganya jelas, tentukan urgensi:
 - Tinggi: ada bahaya keselamatan (korsleting, percikan api, bocor besar, banjir) atau fasilitas mati total sehingga perkuliahan terganggu
@@ -30,6 +30,25 @@ Jika data belum lengkap: {"reply":"...","laporan":null}
 Jika data sudah lengkap: {"reply":"...","laporan":{"kategori":"...","lokasi":"...","deskripsi":"...","urgensi":"Rendah|Sedang|Tinggi"}}
 Saat data lengkap, isi reply dengan konfirmasi singkat bahwa laporan dicatat. Jangan membuat kode tiket sendiri, kode dibuat oleh sistem.
 Jika pesan tidak berkaitan dengan fasilitas kampus, arahkan kembali dengan sopan.`;
+
+// Gaya jawaban per mode. "detail" = perilaku lama, "ringkas" = singkat seperti orang sungguhan.
+const GAYA = {
+  detail: `Gaya bicara: gunakan bahasa Indonesia yang santai, singkat, dan ramah. Kalimat utuh dan jelas, boleh dua sampai tiga kalimat.`,
+
+  ringkas: `Gaya bicara seperti orang sungguhan yang membalas chat sambil buru-buru: bahasa Indonesia sehari-hari, langsung ke inti.
+Aturan wajib:
+- Maksimal 2 kalimat pendek, idealnya 1 kalimat, total di bawah 25 kata.
+- Tanpa salam pembuka, tanpa penutup, tanpa basa-basi, tanpa emoji, tanpa tanda seru berlebihan.
+- Tanpa daftar, bullet, penomoran, atau tanda bintang.
+- Jangan mengulang atau merangkum ucapan pengguna.
+- Jika ada data yang kurang, tanya satu hal itu saja dengan kalimat tanya pendek.
+- Jika data sudah lengkap, cukup konfirmasi pendek, contoh: "Oke, sudah saya catat."
+- Jika pesan di luar topik fasilitas, arahkan balik dengan satu kalimat singkat.`,
+};
+
+function systemPrompt(mode) {
+  return INTI + '\n\n' + GAYA[mode === 'ringkas' ? 'ringkas' : 'detail'];
+}
 
 const URGENSI = ['Rendah', 'Sedang', 'Tinggi'];
 
@@ -64,7 +83,7 @@ function parseReply(text) {
   }
 }
 
-async function callClaude(messages, info) {
+async function callClaude(messages, sys, info) {
   if (!process.env.ANTHROPIC_API_KEY) {
     throw new Error('ANTHROPIC_API_KEY belum terbaca di server (cek nama variabel dan Redeploy)');
   }
@@ -81,7 +100,7 @@ async function callClaude(messages, info) {
         'anthropic-version': '2023-06-01',
       },
       signal: ctrl.signal,
-      body: JSON.stringify({ model, max_tokens: 400, system: SYSTEM, messages }),
+      body: JSON.stringify({ model, max_tokens: 400, system: sys, messages }),
     });
   } catch (e) {
     if (e && e.name === 'AbortError') throw new Error('Claude terlalu lama menjawab (lebih dari 20 detik)');
@@ -95,7 +114,7 @@ async function callClaude(messages, info) {
   return d.content.filter((b) => b.type === 'text').map((b) => b.text).join('');
 }
 
-async function callHuggingFace(messages) {
+async function callHuggingFace(messages, sys) {
   const r = await fetch('https://router.huggingface.co/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -105,7 +124,7 @@ async function callHuggingFace(messages) {
     body: JSON.stringify({
       model: process.env.HF_MODEL,
       max_tokens: 400,
-      messages: [{ role: 'system', content: SYSTEM }, ...messages],
+      messages: [{ role: 'system', content: sys }, ...messages],
     }),
   });
   if (!r.ok) throw new Error('Hugging Face API ' + r.status + ': ' + (await r.text()));
@@ -139,7 +158,7 @@ function rankModels(names) {
   return [...lite(stable), ...plain(stable), ...lite(pre), ...plain(pre)];
 }
 
-async function callGemini(messages, info) {
+async function callGemini(messages, sys, info) {
   const base = { maxOutputTokens: 600, responseMimeType: 'application/json' };
   const TMO = Number(process.env.GEMINI_TIMEOUT_MS) || 12000;
 
@@ -154,7 +173,7 @@ async function callGemini(messages, info) {
   variants.push({ maxOutputTokens: 600 });
 
   const makeBody = (cfg) => JSON.stringify({
-    systemInstruction: { parts: [{ text: SYSTEM }] },
+    systemInstruction: { parts: [{ text: sys }] },
     contents: messages.map((m) => ({
       role: m.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: m.content }],
@@ -326,17 +345,20 @@ module.exports = async (req, res) => {
   }
   try {
     const provider = (process.env.AI_PROVIDER || 'gemini').toLowerCase();
+    const mode = String((req.body && req.body.mode) || '').toLowerCase() === 'ringkas' ? 'ringkas' : 'detail';
+    const sys = systemPrompt(mode);
     const t0 = Date.now();
     const info = {};
     let text;
      if (provider === 'gemini' && !process.env.GEMINI_API_KEY) throw new Error('GEMINI_API_KEY belum terbaca di server (cek nama variabel dan Redeploy)');
-     if (provider === 'gemini') text = await callGemini(messages, info);
-     else if (provider === 'huggingface') text = await callHuggingFace(messages);
-     else text = await callClaude(messages, info);
+     if (provider === 'gemini') text = await callGemini(messages, sys, info);
+     else if (provider === 'huggingface') text = await callHuggingFace(messages, sys);
+     else text = await callClaude(messages, sys, info);
     const out = parseReply(text);
     out.ms = Date.now() - t0; // lama waktu panggilan ke AI (milidetik)
     out.model = info.model;
     out.think = info.think;
+    out.mode = mode;
     return res.status(200).json(out);
   } catch (e) {
     console.error(e);
